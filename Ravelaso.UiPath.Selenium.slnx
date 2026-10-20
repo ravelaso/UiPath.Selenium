@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="Ravelaso.UiPath.Selenium.Core/Ravelaso.UiPath.Selenium.Core.csproj" />
   <Project Path="Ravelaso.UiPath.Selenium.Tests/Ravelaso.UiPath.Selenium.Tests.csproj" />
+  <Project Path="Ravelaso.UiPath.Selenium.Package/Ravelaso.UiPath.Selenium.Package.csproj" />
 </Solution>

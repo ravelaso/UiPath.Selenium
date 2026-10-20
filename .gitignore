@@ -10,3 +10,8 @@ riderModule.iml
 
 # App secrets — each developer creates their own from appsettings.Example.json
 appsettings.json
+
+# NuGet packages (dist folder)
+dist/
+*.nupkg
+*.snupkg

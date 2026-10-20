@@ -1,0 +1,75 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!-- Import central versioning -->
+    <Import Project="..\Version.props" />
+
+    <PropertyGroup>
+        <!-- Version Strategy: Fixed Release + Auto-increment Debug -->
+        <Version>$(VersionPrefix)</Version>
+        <VersionSuffix Condition="'$(Configuration)' == 'Debug'">dev.$(BuildTimestamp).$(BuildCounter)</VersionSuffix>
+        
+        <!-- Build Configuration -->
+        <OutputType>Library</OutputType>
+        <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <LangVersion>latest</LangVersion>
+
+        <!-- NuGet Pack Settings: Only auto-pack in Release -->
+        <GeneratePackageOnBuild Condition="'$(Configuration)' == 'Release'">true</GeneratePackageOnBuild>
+        <PackageOutputPath>$(SolutionDir)dist</PackageOutputPath>
+        <IncludeSymbols>false</IncludeSymbols>
+        <IncludeSource>false</IncludeSource>
+        <DeterministicSourcePaths>true</DeterministicSourcePaths>
+
+        <!-- Runtime Assets: Ensure selenium-manager.exe is included -->
+        <RuntimeIdentifiers>win-x64;win-x86</RuntimeIdentifiers>
+        <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    </PropertyGroup>
+
+    <!-- Timestamp for Debug suffix (auto-increment) -->
+    <PropertyGroup>
+        <BuildTimestamp>$([System.DateTime]::UtcNow.ToString('yyyyMMdd'))</BuildTimestamp>
+        <BuildCounter>$([System.DateTime]::UtcNow.Ticks.ToString().Substring(0, 5))</BuildCounter>
+    </PropertyGroup>
+
+    <!-- Reference Core Library -->
+    <ItemGroup>
+        <ProjectReference Include="..\Ravelaso.UiPath.Selenium.Core\Ravelaso.UiPath.Selenium.Core.csproj" />
+    </ItemGroup>
+
+    <!-- Pack dependencies (transitive) + runtimes -->
+    <PropertyGroup>
+        <TargetsForTfmSpecificBuildOutput>
+            $(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage
+        </TargetsForTfmSpecificBuildOutput>
+    </PropertyGroup>
+    
+    <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="ResolveReferences">
+        <ItemGroup>
+            <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths)" />
+        </ItemGroup>
+    </Target>
+
+    <!-- Copy runtimes folder for packing (post-build) -->
+    <Target Name="CopyRuntimesToPackage" AfterTargets="Build">
+        <ItemGroup>
+            <RuntimeAssets Include="$(OutputPath)runtimes\**\*" />
+        </ItemGroup>
+        <Message Text="Copying runtime assets from: $(OutputPath)runtimes\" Importance="high" />
+        <Copy SourceFiles="@(RuntimeAssets)" DestinationFiles="@(RuntimeAssets->'$(OutputPath)runtimes\%(RecursiveDir)%(Filename)%(Extension)')" />
+    </Target>
+
+    <!-- Include in pack -->
+    <ItemGroup>
+        <None Include="$(OutputPath)runtimes\**\*" Pack="true" PackagePath="runtimes\%(RecursiveDir)" />
+    </ItemGroup>
+
+    <!-- Include Documentation in Package -->
+    <ItemGroup>
+        <None Include="..\README.md" Pack="true" PackagePath="\" />
+        <None Include="..\docs\**\*.md" Pack="true" PackagePath="docs\" />
+    </ItemGroup>
+
+</Project>

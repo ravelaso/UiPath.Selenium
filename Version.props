@@ -1,0 +1,21 @@
+<Project>
+  <PropertyGroup>
+    <!-- Semantic Versioning -->
+    <VersionMajor>1</VersionMajor>
+    <VersionMinor>0</VersionMinor>
+    <VersionPatch>1</VersionPatch>
+    <VersionPrefix>$(VersionMajor).$(VersionMinor).$(VersionPatch)</VersionPrefix>
+
+    <!-- NuGet Package Metadata -->
+    <PackageId>Ravelaso.UiPath.Selenium</PackageId>
+    <Title>Ravelaso.UiPath.Selenium</Title>
+    <Authors>Ravelaso</Authors>
+    <Description>Selenium WebDriver wrapper for .NET with fluent locators, global delay pattern, and UiPath Studio 25.10 compatibility</Description>
+    <PackageProjectUrl>https://github.com/ravelaso/UiPath.Selenium</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/ravelaso/UiPath.Selenium</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>selenium;uipath;webdriver;automation;net8;net10</PackageTags>
+    <PackageReleaseNotes>v1.0.1: Initial release with 14 client operations, fluent locators, global delay pattern, and selenium-manager.exe bundled for production deployment</PackageReleaseNotes>
+  </PropertyGroup>
+</Project>

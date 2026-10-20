@@ -17,8 +17,9 @@ Wrapper de **Selenium WebDriver** para .NET, pensado para ser usado desde workfl
 | [`plan.md`](./plan.md) | Plan de implementación, decisiones de diseño y restricciones |
 | [`api.md`](./api.md) | Referencia de la API del cliente |
 | [`locators.md`](./locators.md) | Reglas del builder de localizadores (`Loc` / `Locator`) |
-| [`QUICKSTART.md`](./QUICKSTART.md) | 8 ejemplos ready-to-use (nuevo) |
-| [`CHANGELOG.md`](./CHANGELOG.md) | Release notes v0.1.0 (nuevo) |
+| [`QUICKSTART.md`](./QUICKSTART.md) | 8 ejemplos ready-to-use |
+| [`PACKAGING.md`](./PACKAGING.md) | Guía de empaquetado, versionado y distribución (NUEVO) |
+| [`CHANGELOG.md`](./CHANGELOG.md) | Release notes v0.1.0 |
 
 ---
 
