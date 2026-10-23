@@ -4,9 +4,12 @@
     <Import Project="..\Version.props" />
 
     <PropertyGroup>
-        <!-- Version Strategy: Fixed Release + Auto-increment Debug -->
-        <Version>$(VersionPrefix)</Version>
-        <VersionSuffix Condition="'$(Configuration)' == 'Debug'">dev.$(BuildTimestamp).$(BuildCounter)</VersionSuffix>
+        <!-- Build Counter (unique per build: HHMM format - hours and minutes) -->
+        <BuildCounter>$([System.DateTime]::UtcNow.ToString("HHmm"))</BuildCounter>
+        
+        <!-- Version Strategy: Fixed Release (1.1.0) + Auto-increment Debug (1.1.0-build0HHMM) -->
+        <VersionPrefix Condition="'$(Configuration)' == 'Release'">$(VersionMajor).$(VersionMinor).$(VersionPatch)</VersionPrefix>
+        <VersionPrefix Condition="'$(Configuration)' == 'Debug'">$(VersionMajor).$(VersionMinor).$(VersionPatch)-build$(BuildCounter)</VersionPrefix>
         
         <!-- Build Configuration -->
         <OutputType>Library</OutputType>
@@ -15,23 +18,17 @@
         <Nullable>enable</Nullable>
         <LangVersion>latest</LangVersion>
 
-        <!-- NuGet Pack Settings: Only auto-pack in Release -->
-        <GeneratePackageOnBuild Condition="'$(Configuration)' == 'Release'">true</GeneratePackageOnBuild>
+        <!-- NuGet Pack Settings: Auto-pack in both Release and Debug -->
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageOutputPath>$(SolutionDir)dist</PackageOutputPath>
         <IncludeSymbols>false</IncludeSymbols>
         <IncludeSource>false</IncludeSource>
-        <DeterministicSourcePaths>true</DeterministicSourcePaths>
+        <DeterministicSourcePaths Condition="'$(Configuration)' == 'Release'">true</DeterministicSourcePaths>
 
         <!-- Runtime Assets: Ensure selenium-manager.exe is included -->
         <RuntimeIdentifiers>win-x64;win-x86</RuntimeIdentifiers>
         <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    </PropertyGroup>
-
-    <!-- Timestamp for Debug suffix (auto-increment) -->
-    <PropertyGroup>
-        <BuildTimestamp>$([System.DateTime]::UtcNow.ToString('yyyyMMdd'))</BuildTimestamp>
-        <BuildCounter>$([System.DateTime]::UtcNow.Ticks.ToString().Substring(0, 5))</BuildCounter>
     </PropertyGroup>
 
     <!-- Reference Core Library -->

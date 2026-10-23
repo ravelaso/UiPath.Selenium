@@ -241,8 +241,12 @@ public sealed class Locator
         return sb.ToString();
     }
 
+    /// <summary>
+    /// Escapes a value for use inside a CSS attribute string.
+    /// Returns the escaped content WITHOUT surrounding quotes; callers add the quotes.
+    /// </summary>
     private static string EscapeCssString(string value)
-        => $"\"{value.Replace("\\", "\\\\").Replace("\"", "\\\"")}\"";
+        => value.Replace("\\", "\\\\").Replace("\"", "\\\"");
 
     private static bool IsSafeCssIdentifier(string value)
     {

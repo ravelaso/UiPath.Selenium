@@ -105,15 +105,96 @@ public class RavelasoWebClient : IDisposable
     /// <returns>The found <see cref="IWebElement"/>.</returns>
     /// <exception cref="WebDriverTimeoutException">If the element is not found within the timeout.</exception>
     /// <exception cref="NoSuchElementException">If the locator produces no results.</exception>
+    /// <summary>
+    /// Resolves a locator to an element, applying the configured timeout.
+    /// Searches the light DOM first and, if not found, falls back to a recursive
+    /// search through any open Shadow DOM roots so that Web Components (e.g.
+    /// &lt;alusta-navigation&gt;) are supported transparently by every API method.
+    /// </summary>
     protected IWebElement WaitElement(By locator, TimeSpan? timeout = null)
     {
         var wait = timeout ?? ElementWaitTimeout;
 
         if (wait <= TimeSpan.Zero)
-            return _driver.FindElement(locator);
+        {
+            try
+            {
+                return _driver.FindElement(locator);
+            }
+            catch (NoSuchElementException)
+            {
+                var shadowElement = FindInShadowRoots(locator);
+                if (shadowElement != null)
+                    return shadowElement;
+
+                throw;
+            }
+        }
 
         var webDriverWait = new WebDriverWait(_driver, wait);
-        return webDriverWait.Until(driver => driver.FindElement(locator));
+        return webDriverWait.Until(driver =>
+        {
+            try
+            {
+                return driver.FindElement(locator);
+            }
+            catch (NoSuchElementException)
+            {
+                return FindInShadowRoots(locator);
+            }
+        });
+    }
+
+    /// <summary>
+    /// Searches the light DOM first and then recursively through all open Shadow DOM
+    /// roots for an element matching <paramref name="locator"/>.
+    /// Returns null when no match is found.
+    /// </summary>
+    protected IWebElement? FindInShadowRoots(By locator)
+    {
+        try
+        {
+            return SearchShadowRoots(_driver, locator);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Recursive helper that searches a given search context (document or shadow root)
+    /// and descends into every open shadow root it contains.
+    /// </summary>
+    private static IWebElement? SearchShadowRoots(ISearchContext context, By locator)
+    {
+        try
+        {
+            return context.FindElement(locator);
+        }
+        catch (NoSuchElementException) { }
+        catch (WebDriverException) { }
+
+        foreach (var element in context.FindElements(By.CssSelector("*")))
+        {
+            ISearchContext? shadowRoot = null;
+            try
+            {
+                shadowRoot = element.GetShadowRoot();
+            }
+            catch (NoSuchShadowRootException) { }
+            catch (StaleElementReferenceException) { }
+            catch (WebDriverException) { }
+
+            if (shadowRoot == null)
+                continue;
+
+            var found = SearchShadowRoots(shadowRoot, locator);
+            if (found != null)
+                return found;
+        }
+
+        return null;
     }
 
     /// <summary>
@@ -318,6 +399,98 @@ public class RavelasoWebClient : IDisposable
         }
         catch (WebDriverTimeoutException) { return false; }
         catch (NotFoundException) { return false; }
+    }
+
+    #endregion
+
+    #region Shadow DOM
+
+    /// <summary>
+    /// Finds an element inside the shadow root of a host element (e.g. a Web Component).
+    /// </summary>
+    /// <param name="hostLocator">Locator for the host element that owns the shadow root.</param>
+    /// <param name="targetLocator">Locator for the element to find inside the shadow root.</param>
+    /// <param name="timeout">Optional custom timeout. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+    /// <returns>The found element.</returns>
+    public IWebElement FindInShadowRoot(By hostLocator, By targetLocator, TimeSpan? timeout = null)
+    {
+        BeforeStep();
+        var wait = timeout ?? ElementWaitTimeout;
+        if (wait <= TimeSpan.Zero)
+        {
+            var host = _driver.FindElement(hostLocator);
+            var found = SearchShadowRoots(host.GetShadowRoot(), targetLocator);
+            if (found == null)
+                throw new NoSuchElementException($"Element not found in shadow root of '{hostLocator}'.");
+            return found;
+        }
+
+        var wdw = new WebDriverWait(_driver, wait);
+        return wdw.Until(driver =>
+        {
+            try
+            {
+                var host = driver.FindElement(hostLocator);
+                return SearchShadowRoots(host.GetShadowRoot(), targetLocator);
+            }
+            catch (NoSuchElementException) { return null; }
+            catch (NoSuchShadowRootException) { return null; }
+            catch (WebDriverException) { return null; }
+        }) ?? throw new WebDriverTimeoutException($"Timed out waiting for element in shadow root of '{hostLocator}'.");
+    }
+
+    /// <summary>
+    /// Finds an element inside the shadow root of a host element (Locator overload).
+    /// </summary>
+    public IWebElement FindInShadowRoot(Locator hostLocator, Locator targetLocator, TimeSpan? timeout = null)
+        => FindInShadowRoot(hostLocator.ToBy(), targetLocator.ToBy(), timeout);
+
+    /// <summary>
+    /// Checks whether an element exists inside the shadow root of a host element.
+    /// </summary>
+    public bool ExistsInShadowRoot(By hostLocator, By targetLocator, TimeSpan? timeout = null)
+    {
+        BeforeStep();
+        try
+        {
+            FindInShadowRoot(hostLocator, targetLocator, timeout ?? TimeSpan.Zero);
+            return true;
+        }
+        catch (NotFoundException) { return false; }
+        catch (WebDriverTimeoutException) { return false; }
+        catch (WebDriverException) { return false; }
+    }
+
+    /// <summary>
+    /// Checks whether an element exists inside the shadow root of a host element (Locator overload).
+    /// </summary>
+    public bool ExistsInShadowRoot(Locator hostLocator, Locator targetLocator, TimeSpan? timeout = null)
+        => ExistsInShadowRoot(hostLocator.ToBy(), targetLocator.ToBy(), timeout);
+
+    /// <summary>
+    /// Clicks an element located inside the shadow root of a host element.
+    /// </summary>
+    public void ClickShadow(By hostLocator, By targetLocator)
+    {
+        BeforeStep();
+        var element = FindInShadowRoot(hostLocator, targetLocator, null);
+        element.Click();
+    }
+
+    /// <summary>
+    /// Clicks an element located inside the shadow root of a host element (Locator overload).
+    /// </summary>
+    public void ClickShadow(Locator hostLocator, Locator targetLocator)
+        => ClickShadow(hostLocator.ToBy(), targetLocator.ToBy());
+
+    /// <summary>
+    /// Clicks a previously resolved element, applying the global delay.
+    /// Useful for elements obtained from shadow roots or other custom searches.
+    /// </summary>
+    public void Click(IWebElement element)
+    {
+        BeforeStep();
+        element.Click();
     }
 
     #endregion

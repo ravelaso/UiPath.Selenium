@@ -39,6 +39,18 @@ internal static class AnchorLocatorHelper
     }
 
     /// <summary>
+    /// Gets the bounding rectangle of an element as a tuple for convenient consumption.
+    /// </summary>
+    /// <param name="driver">The WebDriver instance.</param>
+    /// <param name="element">The element to get bounds for.</param>
+    /// <returns>Tuple with x, y, width, height.</returns>
+    internal static (double X, double Y, double Width, double Height) GetRect(IWebDriver driver, IWebElement element)
+    {
+        var rect = GetBoundingRect(driver, element);
+        return (rect["x"], rect["y"], rect["width"], rect["height"]);
+    }
+
+    /// <summary>
     /// Gets the bounding rectangle of an element using JavaScript.
     /// </summary>
     /// <param name="driver">The WebDriver instance.</param>

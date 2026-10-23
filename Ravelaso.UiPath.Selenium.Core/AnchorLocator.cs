@@ -1,5 +1,6 @@
 using OpenQA.Selenium;
 using System.Diagnostics;
+using System.Threading;
 
 namespace Ravelaso.UiPath.Selenium.Core;
 
@@ -111,53 +112,53 @@ public class AnchorLocator
             throw new InvalidOperationException("Target not defined. Call Find() before Resolve().");
 
         var directionsToTry = _searchOrder ?? GetExhaustiveOrder();
-        var sw = Stopwatch.StartNew();
         var anchorBy = _anchor.ToBy();
         var targetBy = _target.ToBy();
+        var pollInterval = TimeSpan.FromMilliseconds(200);
+        var sw = Stopwatch.StartNew();
 
-        foreach (var direction in directionsToTry)
+        // Poll until the DOM (often rendered lazily by Angular/SPA frameworks) exposes
+        // both the anchor and a target matching one of the requested directions.
+        while (sw.Elapsed < _timeout)
         {
-            if (sw.Elapsed > _timeout)
-                throw new TimeoutException(
-                    $"Anchor search exceeded timeout ({_timeout.TotalSeconds}s).\n" +
-                    $"Anchor: {anchorBy}\n" +
-                    $"Target: {targetBy}\n" +
-                    $"Directions tried: {string.Join(", ", directionsToTry)}"
-                );
-
             try
             {
-                // Find anchor element first
                 var anchorElements = _driver.FindElements(anchorBy);
-                if (!anchorElements.Any())
-                    continue;
-
-                var anchorElement = anchorElements.First();
-
-                // Build search XPath based on direction
-                var searchXPath = BuildSearchXPath(anchorElement, direction, targetBy);
-                var targetElements = _driver.FindElements(By.XPath(searchXPath));
-
-                if (targetElements.Any())
+                if (anchorElements.Count > 0)
                 {
-                    // Found element(s) in this direction
-                    var closest = SelectClosestElement(anchorElement, targetElements);
-                    
-                    // Return a Locator that will find this specific element
-                    return Loc.XPath(GetElementXPath(closest));
+                    var anchorElement = anchorElements[0];
+                    var targetElements = _driver.FindElements(targetBy);
+
+                    foreach (var direction in directionsToTry)
+                    {
+                        var matches = new List<IWebElement>();
+                        foreach (var candidate in targetElements)
+                        {
+                            if (IsInDirection(_driver, anchorElement, candidate, direction))
+                                matches.Add(candidate);
+                        }
+
+                        if (matches.Count > 0)
+                        {
+                            var closest = SelectClosestElement(anchorElement, matches);
+                            return Loc.XPath(GetElementXPath(closest));
+                        }
+                    }
                 }
-            }
-            catch (NoSuchElementException)
-            {
-                continue;
             }
             catch (StaleElementReferenceException)
             {
-                continue;
+                // The DOM changed between calls; retry on the next poll iteration.
             }
+
+            var remaining = _timeout - sw.Elapsed;
+            if (remaining <= pollInterval)
+                break;
+
+            Thread.Sleep(pollInterval);
         }
 
-        // Nothing found in any direction
+        // Nothing found in any direction within the timeout.
         throw new NoSuchElementException(
             $"Anchor search failed: could not find target relative to anchor.\n" +
             $"Anchor: {anchorBy}\n" +
@@ -198,45 +199,132 @@ public class AnchorLocator
     }
 
     /// <summary>
-    /// Builds an XPath that searches for the target in a specific direction from the anchor.
+    /// Determines whether a candidate element satisfies the spatial/structural relationship
+    /// described by <paramref name="direction"/> with respect to <paramref name="anchor"/>.
+    /// Unlike the previous XPath-string approach, the target locator is always applied first
+    /// (in <see cref="Resolve"/>), so the candidate is guaranteed to match the target selector.
     /// </summary>
-    private string BuildSearchXPath(IWebElement anchorElement, Direction direction, By targetBy)
+    private static bool IsInDirection(IWebDriver driver, IWebElement anchor, IWebElement candidate, Direction direction)
     {
-        // Extract XPath from the target By object
-        var targetXPathString = targetBy.ToString();
-        
-        // Remove "By.XPath: " or "By.CssSelector: " prefix
-        if (targetXPathString.Contains(":"))
-            targetXPathString = targetXPathString[(targetXPathString.IndexOf(":") + 1)..].Trim();
+        if (candidate.Equals(anchor))
+            return false;
 
-        // Get anchor's XPath using JavaScript (all elements have an XPath)
-        var anchorXPath = GetElementXPath(anchorElement);
-
-        // Build search XPath based on direction
         return direction switch
         {
-            Direction.Right => $"({anchorXPath})/following-sibling::*[{targetXPathString.Replace("//", "")}]",
-            Direction.Left => $"({anchorXPath})/preceding-sibling::*[{targetXPathString.Replace("//", "")}]",
-            Direction.Below => $"({anchorXPath})/following::{ExtractTagName(targetXPathString)}",
-            Direction.Above => $"({anchorXPath})/preceding::{ExtractTagName(targetXPathString)}",
-            Direction.SameRow => $"({anchorXPath})/ancestor::tr//{ExtractTagName(targetXPathString)}",
-            Direction.SameContainer => $"({anchorXPath})/ancestor::*[self::div or self::section or self::article or self::main][1]//{ExtractTagName(targetXPathString)}",
-            Direction.Innermost => $"({anchorXPath})//{ExtractTagName(targetXPathString)}",
-            Direction.Anywhere => targetXPathString,
-            _ => targetXPathString
+            Direction.Innermost => IsDescendant(driver, anchor, candidate),
+            Direction.SameRow => SameAncestor(driver, anchor, candidate, "tr"),
+            Direction.SameContainer => SameAncestor(driver, anchor, candidate, "div,section,article,main,form"),
+            Direction.Right => IsSpatiallyInDirection(driver, anchor, candidate, Direction.Right),
+            Direction.Left => IsSpatiallyInDirection(driver, anchor, candidate, Direction.Left),
+            Direction.Below => IsSpatiallyInDirection(driver, anchor, candidate, Direction.Below),
+            Direction.Above => IsSpatiallyInDirection(driver, anchor, candidate, Direction.Above),
+            Direction.Anywhere => true,
+            _ => false
         };
     }
 
     /// <summary>
-    /// Extracts the tag name from an XPath expression.
+    /// Returns true when <paramref name="candidate"/> is a descendant of <paramref name="ancestor"/>.
     /// </summary>
-    private static string ExtractTagName(string xpath)
+    private static bool IsDescendant(IWebDriver driver, IWebElement ancestor, IWebElement candidate)
     {
-        if (xpath.StartsWith("//"))
-            return "*";
-        
-        var match = System.Text.RegularExpressions.Regex.Match(xpath, @"(?:^|/)(\w+)(?:\[|$)");
-        return match.Success ? match.Groups[1].Value : "*";
+        try
+        {
+            var js = (IJavaScriptExecutor)driver;
+            return Convert.ToBoolean(js.ExecuteScript(
+                "return arguments[0] !== arguments[1] && arguments[0].contains(arguments[1]);",
+                ancestor, candidate));
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Returns true when both elements share the same nearest ancestor whose tag is one of
+    /// the (comma-separated) tags in <paramref name="tags"/>.
+    /// </summary>
+    private static bool SameAncestor(IWebDriver driver, IWebElement a, IWebElement b, string tags)
+    {
+        try
+        {
+            var js = (IJavaScriptExecutor)driver;
+            var ancestorA = js.ExecuteScript(
+                "function nearest(e, list) {" +
+                "  var p = e.parentElement;" +
+                "  while (p && p !== document.body) {" +
+                "    var t = p.tagName ? p.tagName.toLowerCase() : '';" +
+                "    if (list.indexOf(t) !== -1) return p;" +
+                "    p = p.parentElement;" +
+                "  }" +
+                "  return null;" +
+                "}" +
+                "return nearest(arguments[0], arguments[1].split(','));",
+                a, tags) as IWebElement;
+            var ancestorB = js.ExecuteScript(
+                "function nearest(e, list) {" +
+                "  var p = e.parentElement;" +
+                "  while (p && p !== document.body) {" +
+                "    var t = p.tagName ? p.tagName.toLowerCase() : '';" +
+                "    if (list.indexOf(t) !== -1) return p;" +
+                "    p = p.parentElement;" +
+                "  }" +
+                "  return null;" +
+                "}" +
+                "return nearest(arguments[0], arguments[1].split(','));",
+                b, tags) as IWebElement;
+
+            if (ancestorA == null || ancestorB == null)
+                return false;
+
+            return ancestorA.Equals(ancestorB);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Spatial filter used by Right/Left/Below/Above directions.
+    /// </summary>
+    private static bool IsSpatiallyInDirection(IWebDriver driver, IWebElement anchor, IWebElement candidate, Direction direction)
+    {
+        var a = AnchorLocatorHelper.GetRect(driver, anchor);
+        var c = AnchorLocatorHelper.GetRect(driver, candidate);
+
+        // Elements with no layout info (hidden/zero-size) cannot be positioned reliably.
+        if (a.Width <= 0 && a.Height <= 0 && c.Width <= 0 && c.Height <= 0)
+            return false;
+
+        var anchorCenterX = a.X + a.Width / 2.0;
+        var anchorCenterY = a.Y + a.Height / 2.0;
+        var candidateCenterX = c.X + c.Width / 2.0;
+        var candidateCenterY = c.Y + c.Height / 2.0;
+
+        var verticallyOverlaps = c.Y < a.Y + a.Height && c.Y + c.Height > a.Y;
+        var horizontallyOverlaps = c.X < a.X + a.Width && c.X + c.Width > a.X;
+
+        var rowToleranceOk = verticallyOverlaps || Math.Abs(candidateCenterY - anchorCenterY) <= Math.Max(a.Height, c.Height) + 4;
+        var columnToleranceOk = horizontallyOverlaps || Math.Abs(candidateCenterX - anchorCenterX) <= Math.Max(a.Width, c.Width) + 4;
+
+        return direction switch
+        {
+            Direction.Right => candidateCenterX > anchorCenterX
+                && c.X >= a.X + a.Width * 0.5
+                && rowToleranceOk,
+            Direction.Left => candidateCenterX < anchorCenterX
+                && c.X + c.Width <= a.X + a.Width * 0.5
+                && rowToleranceOk,
+            Direction.Below => candidateCenterY > anchorCenterY
+                && c.Y >= a.Y + a.Height * 0.5
+                && columnToleranceOk,
+            Direction.Above => candidateCenterY < anchorCenterY
+                && c.Y + c.Height <= a.Y + a.Height * 0.5
+                && columnToleranceOk,
+            _ => false
+        };
     }
 
     /// <summary>
@@ -270,7 +358,7 @@ public class AnchorLocator
                 "  if (element.id !== '')" +
                 "    return \"//*[@id='\" + element.id + \"']\";" +
                 "  if (element === document.body)" +
-                "    return element.tagName.toLowerCase();" +
+                "    return \"//body\";" +
                 "  var ix = 0;" +
                 "  var siblings = element.parentNode.childNodes;" +
                 "  for (var i = 0; i < siblings.length; i++) {" +
