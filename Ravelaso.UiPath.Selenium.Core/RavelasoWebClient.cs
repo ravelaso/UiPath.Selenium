@@ -427,4 +427,28 @@ public class RavelasoWebClient : IDisposable
     }
 
     #endregion
+
+    #region Anchor System
+
+    /// <summary>
+    /// Helper method to create an anchor locator using this client's driver.
+    /// Simplifies anchor creation by automatically providing the driver instance.
+    /// 
+    /// Example:
+    /// <code>
+    /// var downloadBtn = client.CreateAnchor(Loc.Text("2026-10-22"))
+    ///     .Find(Loc.Css("button.download"))
+    ///     .Resolve();
+    /// 
+    /// client.Click(downloadBtn);
+    /// </code>
+    /// </summary>
+    /// <param name="anchorPoint">The locator for the anchor reference element.</param>
+    /// <returns>A new AnchorLocator configured with this client's driver and the anchor point.</returns>
+    public AnchorLocator CreateAnchor(Locator anchorPoint)
+    {
+        return new AnchorLocator(_driver, anchorPoint);
+    }
+
+    #endregion
 }

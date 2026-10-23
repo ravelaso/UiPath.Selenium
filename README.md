@@ -108,11 +108,67 @@ Supported browsers: Chrome, Edge, Firefox
 
 ## Documentation
 
-- [Quick Start Examples](docs/QUICKSTART.md) — 8 real examples
-- [API Reference](docs/api.md) — All methods
-- [Locator Guide](docs/locators.md) — How to use selectors
-- [Troubleshooting](docs/TROUBLESHOOTING.md) — Common issues
-- [Deployment](docs/PACKAGING.md) — How to package and distribute
+- [Quick Start Examples](docs/QUICKSTART.md) — Code examples
+- [Anchor System](docs/ANCHOR_SYSTEM.md) — Find elements relative to references
+- [Anchor Research](docs/ANCHOR_RESEARCH.md) — How anchors work (deep dive)
+
+---
+
+## Deployment & Packaging
+
+### Release Build (Automated)
+
+```bash
+dotnet build -c Release
+# Output: dist/Ravelaso.UiPath.Selenium.1.0.2.nupkg (7.8 MB)
+```
+
+- Generates `.nupkg` automatically
+- Version: `1.0.2` (fixed, from Version.props)
+- Includes: `selenium-manager.exe`, all dependencies
+- Ready for distribution
+
+### Debug Build (Manual)
+
+```bash
+dotnet build -c Debug
+dotnet pack -c Debug
+# Output: dist/Ravelaso.UiPath.Selenium.1.0.2-dev.20261023.XXXXX.nupkg
+```
+
+- Requires manual `dotnet pack`
+- Version: `1.0.2-dev.20261023.XXXXX` (auto-incremented)
+- For local testing only
+
+### Version Management
+
+Edit `Version.props` to bump version:
+
+```xml
+<VersionMajor>1</VersionMajor>
+<VersionMinor>0</VersionMinor>
+<VersionPatch>2</VersionPatch>
+```
+
+Then rebuild: `dotnet build -c Release`
+
+### Installation Methods
+
+**Method 1: NuGet Package (Recommended)**
+```bash
+# Add to your project
+dotnet add package Ravelaso.UiPath.Selenium
+```
+
+**Method 2: Local File**
+```bash
+# Extract .nupkg and copy DLLs manually to your project Libraries folder
+```
+
+**Method 3: UiPath Studio**
+- Settings → NuGet Packages → Add Source
+- Point to folder containing `.nupkg`
+- Install from Studio UI
 
 ---
 

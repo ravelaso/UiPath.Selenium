@@ -270,4 +270,29 @@ public sealed class Locator
     }
 
     #endregion
+
+    #region Anchor System
+
+    /// <summary>
+    /// Creates an anchor point for relative element searching.
+    /// The anchor system finds target elements relative to a reference (anchor) element,
+    /// useful for dynamic tables, forms, and lists where positions change.
+    /// 
+    /// Example:
+    /// <code>
+    /// var downloadBtn = Loc.Anchor(Loc.Text("2026-10-22"))
+    ///     .Find(Loc.Css("button.download"))
+    ///     .Resolve();
+    /// 
+    /// client.Click(downloadBtn);
+    /// </code>
+    /// </summary>
+    /// <param name="driver">The WebDriver instance to use for element searches.</param>
+    /// <returns>A new AnchorLocator configured with this locator as the anchor point.</returns>
+    public AnchorLocator Anchor(IWebDriver driver)
+    {
+        return new AnchorLocator(driver, this);
+    }
+
+    #endregion
 }

@@ -1,6 +1,6 @@
 # Quick Start Guide
 
-Ready-to-use examples for `Ravelaso.UiPath.Selenium`.
+Code examples for `Ravelaso.UiPath.Selenium`.
 
 ---
 
@@ -346,6 +346,128 @@ catch (Exception ex)
 {
     out_Error = ex.Message;
     out_Success = false;
+}
+finally
+{
+    client.Dispose();
+}
+```
+
+---
+
+## Example 9: Anchor System - Table with Dynamic Rows
+
+**Problem:** Table rows reorder daily, need to always download same report.
+
+```csharp
+using Ravelaso.UiPath.Selenium.Core;
+
+var client = new RavelasoWebClient(BrowserType.Chrome);
+
+try
+{
+    client.Navigate("https://reports.example.com");
+
+    // Find download button in row with date "2026-10-22"
+    // Works even if rows are reordered!
+    var downloadBtn = client.CreateAnchor(Loc.Text("2026-10-22"))
+        .Find(Loc.Css("button.download"))
+        .Resolve();
+
+    client.Click(downloadBtn);
+    
+    Console.WriteLine("Report downloaded!");
+}
+finally
+{
+    client.Dispose();
+}
+```
+
+**HTML:**
+```html
+<table>
+  <tr>
+    <td>Sales Report</td>
+    <td>2026-10-22</td>
+    <td><button class="download">Download</button></td>
+  </tr>
+  <tr>
+    <td>Inventory</td>
+    <td>2026-10-23</td>
+    <td><button class="download">Download</button></td>
+  </tr>
+</table>
+```
+
+---
+
+## Example 10: Anchor System - Form with Labels
+
+**Problem:** Form fields are in flexible layout, find input next to label.
+
+```csharp
+using Ravelaso.UiPath.Selenium.Core;
+
+var client = new RavelasoWebClient(BrowserType.Edge);
+
+try
+{
+    client.Navigate("https://form.example.com");
+
+    // Find email input by its label
+    var emailInput = client.CreateAnchor(Loc.Text("Email:"))
+        .Find(Loc.Css("input[type='email']"))
+        .Resolve();
+
+    client.Type(emailInput, "user@example.com");
+
+    // Find phone input by its label (may be right or below)
+    var phoneInput = client.CreateAnchor(Loc.Text("Phone:"))
+        .Find(Loc.Css("input[type='tel']"))
+        .SearchOrder(Direction.Right, Direction.Below)  // Try right first
+        .Resolve();
+
+    client.Type(phoneInput, "555-1234");
+    
+    Console.WriteLine("Form filled!");
+}
+finally
+{
+    client.Dispose();
+}
+```
+
+---
+
+## Example 11: Anchor System - List with Actions
+
+**Problem:** Delete specific item from list that changes order.
+
+```csharp
+using Ravelaso.UiPath.Selenium.Core;
+
+var client = new RavelasoWebClient(BrowserType.Chrome);
+
+try
+{
+    client.Navigate("https://projects.example.com");
+
+    // Delete "Project Alpha" no matter where it is in the list
+    var deleteBtn = client.CreateAnchor(Loc.Text("Project Alpha"))
+        .Find(Loc.Css("button.delete"))
+        .ExactDirection(Direction.Right)  // Must be to the right
+        .Resolve();
+
+    client.Click(deleteBtn);
+    
+    // Confirm deletion if modal appears
+    if (client.WaitFor(Loc.Id("confirm-dialog"), TimeSpan.FromSeconds(2)))
+    {
+        client.Click(Loc.Css("button.confirm"));
+    }
+    
+    Console.WriteLine("Project deleted!");
 }
 finally
 {
