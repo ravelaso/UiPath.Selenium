@@ -19,6 +19,8 @@ public class RavelasoWebClient : IDisposable
     /// <summary>
     /// The underlying Selenium WebDriver (protected to allow inheritance and IntelliSense on _driver.Manage(), etc.).
     /// </summary>
+    // ReSharper disable once InconsistentNaming
+    // ReSharper disable once MemberCanBePrivate.Global
     protected readonly IWebDriver _driver;
 
     private bool _disposed;
@@ -91,7 +93,7 @@ public class RavelasoWebClient : IDisposable
             throw new ObjectDisposedException(nameof(RavelasoWebClient));
 
         if (GlobalDelay > TimeSpan.Zero)
-            System.Threading.Thread.Sleep(GlobalDelay);
+            Thread.Sleep(GlobalDelay);
     }
 
     /// <summary>
@@ -367,7 +369,7 @@ public class RavelasoWebClient : IDisposable
         // Try to match by visible text (case-insensitive or exact)
         foreach (var option in options)
         {
-            var text = (option.Text ?? string.Empty).Trim();
+            var text = (option.Text).Trim();
             if (string.Equals(text, value, StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(text, value, StringComparison.Ordinal))
             {
