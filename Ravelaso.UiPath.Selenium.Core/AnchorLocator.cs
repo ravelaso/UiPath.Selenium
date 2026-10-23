@@ -24,7 +24,7 @@ namespace Ravelaso.UiPath.Selenium.Core;
 public class AnchorLocator
 {
     private readonly IWebDriver _driver;
-    private readonly Locator _anchor;
+    private readonly List<Locator> _anchors = new();
     private Locator? _target;
     private Direction[]? _searchOrder;
     private TimeSpan _timeout = TimeSpan.FromSeconds(5);
@@ -38,7 +38,7 @@ public class AnchorLocator
     public AnchorLocator(IWebDriver driver, Locator anchor)
     {
         _driver = driver ?? throw new ArgumentNullException(nameof(driver));
-        _anchor = anchor ?? throw new ArgumentNullException(nameof(anchor));
+        _anchors.Add(anchor ?? throw new ArgumentNullException(nameof(anchor)));
     }
 
     /// <summary>
@@ -50,6 +50,26 @@ public class AnchorLocator
     public AnchorLocator Find(Locator target)
     {
         _target = target ?? throw new ArgumentNullException(nameof(target));
+        return this;
+    }
+
+    /// <summary>
+    /// Chains an additional anchor to this locator. The new anchor is resolved
+    /// relative to the previous one, allowing multi-criteria anchor chains such as
+    /// SupplierCode -> InvoiceNumber -> GrossSum without intermediate variables:
+    /// <code>
+    /// client.CreateAnchor(Loc.Tag("span").Text("108068_53467"))
+    ///     .CreateAnchor(Loc.Tag("span").Text("26702173"))
+    ///     .Find(Loc.Tag("span").Text("187.30"))
+    ///     .Resolve();
+    /// </code>
+    /// </summary>
+    /// <param name="anchor">The additional anchor locator.</param>
+    /// <returns>This AnchorLocator instance for method chaining.</returns>
+    /// <exception cref="ArgumentNullException">If anchor is null.</exception>
+    public AnchorLocator CreateAnchor(Locator anchor)
+    {
+        _anchors.Add(anchor ?? throw new ArgumentNullException(nameof(anchor)));
         return this;
     }
 
@@ -112,24 +132,32 @@ public class AnchorLocator
             throw new InvalidOperationException("Target not defined. Call Find() before Resolve().");
 
         var directionsToTry = _searchOrder ?? GetExhaustiveOrder();
-        var anchorBy = _anchor.ToBy();
+        var structural = directionsToTry.Where(d => d != Direction.Anywhere).ToArray();
+        var hasAnywhere = directionsToTry.Contains(Direction.Anywhere);
         var targetBy = _target.ToBy();
         var pollInterval = TimeSpan.FromMilliseconds(200);
         var sw = Stopwatch.StartNew();
 
         // Poll until the DOM (often rendered lazily by Angular/SPA frameworks) exposes
-        // both the anchor and a target matching one of the requested directions.
+        // both the anchor chain and a target matching one of the requested directions.
         while (sw.Elapsed < _timeout)
         {
             try
             {
-                var anchorElements = _driver.FindElements(anchorBy);
-                if (anchorElements.Count > 0)
-                {
-                    var anchorElement = anchorElements[0];
-                    var targetElements = _driver.FindElements(targetBy);
+                var targetElements = _driver.FindElements(targetBy);
 
-                    foreach (var direction in directionsToTry)
+                // Resolve the chain of anchors: every combination of non-unique
+                // intermediate anchors is tried, so multi-criteria anchors (e.g.
+                // SupplierCode -> InvoiceNumber) work even when the first anchor
+                // matches several elements.
+                var finalAnchors = ResolveAnchorChain(structural);
+                if (finalAnchors.Count == 0 && _anchors.Count > 0)
+                    finalAnchors = _driver.FindElements(_anchors[0].ToBy()).ToList();
+
+                // 1. Structural/spatial directions across ALL final anchors.
+                foreach (var anchorElement in finalAnchors)
+                {
+                    foreach (var direction in structural)
                     {
                         var matches = new List<IWebElement>();
                         foreach (var candidate in targetElements)
@@ -144,6 +172,17 @@ public class AnchorLocator
                             return Loc.XPath(GetElementXPath(closest));
                         }
                     }
+                }
+
+                // 2. Global fallback (Anywhere) only if requested and no structural match.
+                if (hasAnywhere && targetElements.Count > 0)
+                {
+                    IWebElement chosen;
+                    if (finalAnchors.Count > 0)
+                        chosen = SelectClosestElement(finalAnchors[0], targetElements);
+                    else
+                        chosen = targetElements.First();
+                    return Loc.XPath(GetElementXPath(chosen));
                 }
             }
             catch (StaleElementReferenceException)
@@ -161,7 +200,7 @@ public class AnchorLocator
         // Nothing found in any direction within the timeout.
         throw new NoSuchElementException(
             $"Anchor search failed: could not find target relative to anchor.\n" +
-            $"Anchor: {anchorBy}\n" +
+            $"Anchors: {string.Join(" -> ", _anchors)}\n" +
             $"Target: {targetBy}\n" +
             $"Directions tried: {string.Join(", ", directionsToTry)}\n" +
             $"Timeout: {_timeout.TotalSeconds}s"
@@ -177,6 +216,59 @@ public class AnchorLocator
     {
         var locator = Resolve();
         return _driver.FindElement(locator.ToBy());
+    }
+
+    /// <summary>
+    /// Resolves the chain of anchors into the list of final anchor elements.
+    /// Each first-anchor candidate is followed through the remaining anchors using
+    /// the structural directions; only fully-resolved chains are returned. This
+    /// allows non-unique intermediate anchors (e.g. a supplier code appearing in
+    /// several rows) to be disambiguated by the following anchor.
+    /// </summary>
+    private List<IWebElement> ResolveAnchorChain(Direction[] structural)
+    {
+        var result = new List<IWebElement>();
+        if (_anchors.Count == 0)
+            return result;
+
+        var firstAnchors = _driver.FindElements(_anchors[0].ToBy());
+        foreach (var first in firstAnchors)
+        {
+            var current = first;
+            bool ok = true;
+            for (int i = 1; i < _anchors.Count; i++)
+            {
+                var next = FindRelative(current, _anchors[i].ToBy(), structural);
+                if (next == null)
+                {
+                    ok = false;
+                    break;
+                }
+                current = next;
+            }
+            if (ok)
+                result.Add(current);
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Finds the closest element matching <paramref name="targetBy"/> relative to
+    /// <paramref name="anchor"/> using only the structural/spatial directions.
+    /// Returns null when no candidate matches.
+    /// </summary>
+    private IWebElement? FindRelative(IWebElement anchor, By targetBy, Direction[] structural)
+    {
+        var candidates = _driver.FindElements(targetBy);
+        foreach (var direction in structural)
+        {
+            var matches = candidates
+                .Where(e => IsInDirection(_driver, anchor, e, direction))
+                .ToList();
+            if (matches.Count > 0)
+                return SelectClosestElement(anchor, matches);
+        }
+        return null;
     }
 
     /// <summary>

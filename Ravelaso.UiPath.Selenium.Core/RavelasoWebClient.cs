@@ -1,4 +1,5 @@
 using OpenQA.Selenium;
+using OpenQA.Selenium.Interactions;
 using OpenQA.Selenium.Support.UI;
 
 namespace Ravelaso.UiPath.Selenium.Core;
@@ -492,6 +493,46 @@ public class RavelasoWebClient : IDisposable
         BeforeStep();
         element.Click();
     }
+
+    #endregion
+
+    #region Mouse / JavaScript
+
+    /// <summary>
+    /// Moves the mouse over an element. Useful for revealing hover-dependent
+    /// elements (e.g. a "clear" button that only appears on input hover).
+    /// </summary>
+    /// <param name="locator">The element locator.</param>
+    public void Hover(By locator)
+    {
+        BeforeStep();
+        var element = WaitElement(locator);
+        new Actions(_driver).MoveToElement(element).Perform();
+    }
+
+    /// <summary>
+    /// Moves the mouse over an element (Locator overload).
+    /// </summary>
+    /// <param name="locator">The element locator.</param>
+    public void Hover(Locator locator) => Hover(locator.ToBy());
+
+    /// <summary>
+    /// Clicks an element using JavaScript, bypassing hit-testing and any
+    /// overlapping element that would intercept a native click.
+    /// </summary>
+    /// <param name="locator">The element locator.</param>
+    public void ClickJs(By locator)
+    {
+        BeforeStep();
+        var element = WaitElement(locator);
+        ((IJavaScriptExecutor)_driver).ExecuteScript("arguments[0].click();", element);
+    }
+
+    /// <summary>
+    /// Clicks an element using JavaScript (Locator overload).
+    /// </summary>
+    /// <param name="locator">The element locator.</param>
+    public void ClickJs(Locator locator) => ClickJs(locator.ToBy());
 
     #endregion
 
