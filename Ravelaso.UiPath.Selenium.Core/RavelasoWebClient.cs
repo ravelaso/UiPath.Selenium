@@ -534,6 +534,157 @@ public class RavelasoWebClient : IDisposable
     /// <param name="locator">The element locator.</param>
     public void ClickJs(Locator locator) => ClickJs(locator.ToBy());
 
+    /// <summary>
+    /// Clicks an element that may be hidden or intercepted by another element.
+    /// If no hover target is provided, the hidden ancestor is auto-discovered via
+    /// <see cref="FindHoverContainer"/>. The method hovers the target to reveal the
+    /// element, forces its visibility via JavaScript, re-resolves it (in case
+    /// Angular recreated the node) and finally clicks it via native JS click.
+    /// </summary>
+    /// <param name="locator">The element locator.</param>
+    /// <param name="hoverTarget">Optional locator of the element to hover in order to reveal <paramref name="locator"/>. If null, auto-discovered.</param>
+    public void ClickHidden(By locator, By? hoverTarget = null)
+    {
+        BeforeStep();
+        var found = FindHoverContainer(locator);
+
+        ClickHidden(locator, found!);
+    }
+
+    /// <summary>
+    /// Clicks a hidden/intercepted element (IWebElement hover target overload).
+    /// </summary>
+    public void ClickHidden(By locator, IWebElement hoverTarget)
+    {
+        BeforeStep();
+        try { new Actions(_driver).MoveToElement(hoverTarget).Perform(); }
+        catch (Exception ex)
+        {
+            throw new RavelasoException("ClickHidden: failed to hover the target element.", ex);
+        }
+        Thread.Sleep(150);
+
+        var element = WaitElement(locator);
+        var js = (IJavaScriptExecutor)_driver;
+        js.ExecuteScript(
+            "var e=arguments[0];" +
+            "e.style.opacity='1'; e.style.visibility='visible';" +
+            "e.style.display='inline-block'; e.style.pointerEvents='auto';" +
+            "e.classList.remove('ng-hide');", element);
+        Thread.Sleep(50);
+
+        element = WaitElement(locator);
+        js.ExecuteScript("arguments[0].click();", element);
+    }
+
+    /// <summary>
+    /// Clicks a hidden/intercepted element (Locator overload).
+    /// </summary>
+    public void ClickHidden(Locator locator, Locator? hoverTarget = null)
+        => ClickHidden(locator.ToBy(), hoverTarget?.ToBy());
+
+    /// <summary>
+    /// Clicks a hidden/intercepted element (Locator + IWebElement hover target overload).
+    /// </summary>
+    public void ClickHidden(Locator locator, IWebElement hoverTarget)
+        => ClickHidden(locator.ToBy(), hoverTarget);
+
+    /// <summary>
+    /// Walks up the DOM from <paramref name="buttonLocator"/> and returns the
+    /// nearest ancestor that is currently hidden (opacity 0 / visibility hidden /
+    /// display none). Useful to discover the correct hover target for a
+    /// hover-revealed element.
+    /// </summary>
+    /// <param name="buttonLocator">The revealed element locator.</param>
+    /// <returns>The hidden ancestor, or null if none found.</returns>
+    public IWebElement? FindHoverContainer(By buttonLocator)
+    {
+        BeforeStep();
+        var button = WaitElement(buttonLocator, TimeSpan.Zero);
+        return (IWebElement?)((IJavaScriptExecutor)_driver).ExecuteScript(
+            "var e=arguments[0];" +
+            "while(e && e !== document.body) {" +
+            "  var s = getComputedStyle(e);" +
+            "  if (s.opacity === '0' || s.visibility === 'hidden' || s.display === 'none')" +
+            "    return e.parentElement;" +
+            "  e = e.parentElement;" +
+            "}" +
+            "return null;", button);
+    }
+
+    /// <summary>
+    /// Discovers the hover container (Locator overload).
+    /// </summary>
+    /// <summary>
+    /// Tries several candidate hover targets and returns the first one that
+    /// reveals the button (opacity becomes > 0 after hovering). Returns null
+    /// if no candidate reveals the button.
+    /// </summary>
+    private IWebElement? DiscoverHoverTarget(By buttonLocator)
+    {
+        var btn = WaitElement(buttonLocator, TimeSpan.Zero);
+        var candidates = new List<IWebElement>();
+
+        // 1. Hermano anterior (inputs container — el que suele tener el :hover CSS)
+        try
+        {
+            var s = (IWebElement?)((IJavaScriptExecutor)_driver).ExecuteScript(
+                "return arguments[0].previousElementSibling;", btn);
+            if (s != null) candidates.Add(s);
+        }
+        catch { }
+
+        // 2. FindHoverContainer (ancestro oculto)
+        try { var c = FindHoverContainer(buttonLocator); if (c != null) candidates.Add(c); } catch { }
+
+        // 3. Padre directo
+        try
+        {
+            var p = (IWebElement?)((IJavaScriptExecutor)_driver).ExecuteScript(
+                "return arguments[0].parentElement;", btn);
+            if (p != null) candidates.Add(p);
+        }
+        catch { }
+
+        // 4. Abuelo
+        try
+        {
+            var g = (IWebElement?)((IJavaScriptExecutor)_driver).ExecuteScript(
+                "return arguments[0].parentElement.parentElement;", btn);
+            if (g != null) candidates.Add(g);
+        }
+        catch { }
+
+        var unique = candidates.Distinct().ToList();
+
+        // Probar cada candidato: hover + verificar si el botón se revela (opacity > 0).
+        // Si ninguno revela via opacity (Selenium MoveToElement no siempre dispara CSS :hover),
+        // devolver el primero (el hermano anterior es el más probable para CSS :hover sibling).
+        foreach (var candidate in unique)
+        {
+            try
+            {
+                new Actions(_driver).MoveToElement(candidate).Perform();
+                Thread.Sleep(300);
+                var opacity = ((IJavaScriptExecutor)_driver).ExecuteScript(
+                    "return getComputedStyle(arguments[0]).opacity;", btn);
+                if (opacity != null && double.TryParse(opacity.ToString(),
+                    System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out var op) && op > 0)
+                {
+                    return candidate;
+                }
+            }
+            catch { }
+        }
+
+        // Fallback: devolver el primer candidato (hermano anterior) sin verificar opacity.
+        return unique.Count > 0 ? unique[0] : null;
+    }
+
+    public IWebElement? FindHoverContainer(Locator buttonLocator)
+        => FindHoverContainer(buttonLocator.ToBy());
+
     #endregion
 
     #region Dropdowns
@@ -647,13 +798,13 @@ public class RavelasoWebClient : IDisposable
     /// <summary>
     /// Helper method to create an anchor locator using this client's driver.
     /// Simplifies anchor creation by automatically providing the driver instance.
-    /// 
+    ///
     /// Example:
     /// <code>
     /// var downloadBtn = client.CreateAnchor(Loc.Text("2026-10-22"))
     ///     .Find(Loc.Css("button.download"))
     ///     .Resolve();
-    /// 
+    ///
     /// client.Click(downloadBtn);
     /// </code>
     /// </summary>
