@@ -97,17 +97,17 @@ class Program
 
     static void RunDemo()
     {
-        Console.WriteLine("Launching browser (Edge, headless)...\n");
+        Console.WriteLine("Launching webBrowser (Edge, headless)...\n");
 
         var options = new BrowserOptions
         {
-            Browser = BrowserType.Edge,
+            WebBrowser = WebBrowser.Edge,
             Headless = true,
             GlobalDelay = TimeSpan.FromMilliseconds(200),
             ElementWaitTimeout = TimeSpan.FromSeconds(5)
         };
 
-        using var client = new RavelasoWebClient(BrowserType.Edge, options);
+        using var client = new RavelasoWebClient(WebBrowser.Edge, options);
 
         // Navigate to test page
         var dataUrl = TestFixtures.GetTestPageDataURL();
@@ -159,8 +159,8 @@ class Program
         Console.WriteLine($"  ✓ Screenshot saved to: {screenshotPath}");
 
         // Cleanup
-        Console.WriteLine($"\n  → Closing browser...");
+        Console.WriteLine($"\n  → Closing webBrowser...");
         client.Quit();
-        Console.WriteLine($"  ✓ Browser closed");
+        Console.WriteLine($"  ✓ WebBrowser closed");
     }
 }

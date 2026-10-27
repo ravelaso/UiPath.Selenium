@@ -10,7 +10,7 @@ namespace Ravelaso.UiPath.Selenium.Core;
 /// </summary>
 /// <remarks>
 /// The client is designed to:
-/// 1. Accept a browser type and create the corresponding driver via <see cref="BrowserDriverFactory"/>.
+/// 1. Accept a webBrowser type and create the corresponding driver via <see cref="BrowserDriverFactory"/>.
 /// 2. Apply a global delay before each operation (configurable via <see cref="BrowserOptions.GlobalDelay"/>).
 /// 3. Provide conditional waits with timeout for element detection.
 /// 4. Use simplified locators via <see cref="Loc"/> and fluent <see cref="Locator"/> chains.
@@ -27,9 +27,9 @@ public class RavelasoWebClient : IDisposable
     private bool _disposed;
 
     /// <summary>
-    /// Gets the browser type in use.
+    /// Gets the webBrowser type in use.
     /// </summary>
-    public BrowserType Browser { get; }
+    public WebBrowser WebBrowser { get; }
 
     /// <summary>
     /// Gets the configuration options for this client.
@@ -62,24 +62,24 @@ public class RavelasoWebClient : IDisposable
     public IWebDriver Driver => _driver;
 
     /// <summary>
-    /// Initializes a new client for the specified browser with default options.
+    /// Initializes a new client for the specified webBrowser with default options.
     /// </summary>
-    /// <param name="browser">The browser type to launch.</param>
-    public RavelasoWebClient(BrowserType browser) : this(browser, null) { }
+    /// <param name="webBrowser">The webBrowser type to launch.</param>
+    public RavelasoWebClient(WebBrowser webBrowser) : this(webBrowser, null) { }
 
     /// <summary>
-    /// Initializes a new client for the specified browser with custom options.
+    /// Initializes a new client for the specified webBrowser with custom options.
     /// </summary>
-    /// <param name="browser">The browser type to launch.</param>
+    /// <param name="webBrowser">The webBrowser type to launch.</param>
     /// <param name="options">Configuration options. If null, defaults are used.</param>
-    public RavelasoWebClient(BrowserType browser, BrowserOptions? options)
+    public RavelasoWebClient(WebBrowser webBrowser, BrowserOptions? options)
     {
         options ??= new BrowserOptions();
-        options.Browser = browser;
+        options.WebBrowser = webBrowser;
 
-        Browser = browser;
+        WebBrowser = webBrowser;
         Options = options;
-        _driver = BrowserDriverFactory.Create(browser, options);
+        _driver = BrowserDriverFactory.Create(webBrowser, options);
     }
 
     /// <summary>
@@ -199,7 +199,7 @@ public class RavelasoWebClient : IDisposable
     }
 
     /// <summary>
-    /// Closes the browser and releases the driver resources. Idempotent.
+    /// Closes the webBrowser and releases the driver resources. Idempotent.
     /// </summary>
     public void Quit()
     {

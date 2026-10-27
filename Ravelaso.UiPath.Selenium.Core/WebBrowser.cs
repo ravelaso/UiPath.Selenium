@@ -1,9 +1,9 @@
 namespace Ravelaso.UiPath.Selenium.Core;
 
 /// <summary>
-/// Supported browser types.
+/// Supported webBrowser types.
 /// </summary>
-public enum BrowserType
+public enum WebBrowser
 {
     /// <summary>Google Chrome.</summary>
     Chrome,

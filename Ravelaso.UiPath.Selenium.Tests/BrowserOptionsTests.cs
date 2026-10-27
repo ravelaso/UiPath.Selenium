@@ -16,7 +16,7 @@ public class BrowserOptionsTests
     {
         var options = new BrowserOptions();
         
-        Assert.Equal(BrowserType.Edge, options.Browser);
+        Assert.Equal(WebBrowser.Edge, options.WebBrowser);
         Assert.False(options.Headless);
         Assert.True(options.Maximize);
         Assert.Equal(1920, options.WindowWidth);
@@ -37,7 +37,7 @@ public class BrowserOptionsTests
     {
         var options = new BrowserOptions
         {
-            Browser = BrowserType.Chrome,
+            WebBrowser = WebBrowser.Chrome,
             Headless = true,
             Maximize = false,
             WindowWidth = 1280,
@@ -52,7 +52,7 @@ public class BrowserOptionsTests
         options.ExtraArguments.Add("--no-sandbox");
         options.ExtraArguments.Add("--disable-dev-shm-usage");
         
-        Assert.Equal(BrowserType.Chrome, options.Browser);
+        Assert.Equal(WebBrowser.Chrome, options.WebBrowser);
         Assert.True(options.Headless);
         Assert.False(options.Maximize);
         Assert.Equal(1280, options.WindowWidth);
