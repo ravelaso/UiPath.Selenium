@@ -3,6 +3,7 @@ namespace Ravelaso.UiPath.Selenium.Core;
 /// <summary>
 /// Static facade for building locators fluently and simply.
 /// Single entry point for creating selectors: <c>Loc.Id("x")</c>, <c>Loc.Css(".btn")</c>, etc.
+/// Supports chaining: <c>Loc.Tag("button").Attr("data-t-id", "submit").Text("Save")</c>.
 /// </summary>
 public static class Loc
 {
@@ -39,11 +40,30 @@ public static class Loc
     public static Locator PartialLinkText(string text) => new(Locator.PartKind.PartialLinkText, text);
 
     /// <summary>Create a locator by custom attribute.</summary>
-    /// <example><c>Loc.Attr("data-testid", "submit-button")</c></example>
+    /// <example>
+    /// <code>
+    /// // Single attribute
+    /// Loc.Attr("data-testid", "submit-button")
+    ///
+    /// // Chained attributes
+    /// Loc.Tag("button").Attr("data-t-id", "clear").Attr("aria-label", "Clear")
+    /// </code>
+    /// </example>
     public static Locator Attr(string attributeName, string value) => new(Locator.PartKind.Attribute, value, attributeName);
 
     /// <summary>Create a locator by visible text (forces XPath mode).</summary>
-    /// <example><c>Loc.Text("Save")</c></example>
+    /// <example>
+    /// <code>
+    /// // Contains text
+    /// Loc.Text("Save")
+    ///
+    /// // Tag + text
+    /// Loc.Tag("button").Text("Search")
+    ///
+    /// // Partial match (contains)
+    /// Loc.Tag("span").Text("187.30")
+    /// </code>
+    /// </example>
     public static Locator Text(string text) => new(Locator.PartKind.Text, text);
 
     /// <summary>

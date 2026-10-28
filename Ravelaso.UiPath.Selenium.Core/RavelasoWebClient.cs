@@ -232,9 +232,16 @@ public class RavelasoWebClient : IDisposable
     #region Navigation
 
     /// <summary>
+    /// <summary>
     /// Navigates to the specified URL.
     /// </summary>
     /// <param name="url">The URL to navigate to.</param>
+    /// <example>
+    /// <code>
+    /// client.Navigate("https://example.com");
+    /// client.Navigate("https://dhlecommercetest.p2p.basware.com");
+    /// </code>
+    /// </example>
     public void Navigate(string url)
     {
         BeforeStep();
@@ -282,12 +289,52 @@ public class RavelasoWebClient : IDisposable
     /// </summary>
     /// <param name="locator">The element locator.</param>
     /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+    /// <example>
+    /// <code>
+    /// // Click a button by data-t-id
+    /// client.Click(Loc.Tag("button").Attr("data-t-id", "submit"));
+    ///
+    /// // Click a link with extended timeout (30s)
+    /// client.Click(Loc.Tag("a").Attr("href", "/ap/"), TimeSpan.FromSeconds(30));
+    /// </code>
+    /// </example>
     public void Click(By locator, TimeSpan? timeout = null)
     {
         BeforeStep();
         var element = WaitElement(locator, timeout);
         element.Click();
     }
+
+    /// <summary>
+    /// Double-clicks an element located by the given locator.
+    /// Useful for grids (e.g., ag-grid) where double-clicking a row opens the detail page.
+    /// </summary>
+    /// <param name="locator">The element locator.</param>
+    /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+    /// <example>
+    /// <code>
+    /// // Double-click a resolved anchor cell
+    /// var cell = client.CreateAnchor(Loc.Tag("span").Text("139121_779639"))
+    ///     .Find(Loc.Tag("span").Text("90.00"))
+    ///     .Resolve();
+    /// client.DoubleClick(cell);
+    ///
+    /// // Double-click by locator
+    /// client.DoubleClick(Loc.Tag("span").Text("187.30"));
+    /// </code>
+    /// </example>
+    public void DoubleClick(By locator, TimeSpan? timeout = null)
+    {
+        BeforeStep();
+        var element = WaitElement(locator, timeout);
+        new Actions(_driver).DoubleClick(element).Perform();
+    }
+
+    /// <summary>
+    /// Double-clicks an element (Locator overload).
+    /// </summary>
+    public void DoubleClick(Locator locator, TimeSpan? timeout = null)
+        => DoubleClick(locator.ToBy(), timeout);
 
     /// <summary>
     /// Enters text into an element. Optionally clears the field first.
@@ -303,6 +350,15 @@ public class RavelasoWebClient : IDisposable
     /// <param name="text">The text to enter.</param>
     /// <param name="clear">If true, clears the field before typing. Default: true.</param>
     /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+    /// <example>
+    /// <code>
+    /// // Type into an input by id
+    /// client.Type(Loc.Id("txtLogin"), "user@example.com");
+    ///
+    /// // Type without clearing first
+    /// client.Type(Loc.Id("search"), "query", clear: false);
+    /// </code>
+    /// </example>
     public void Type(By locator, string text, bool clear = true, TimeSpan? timeout = null)
     {
         BeforeStep();
@@ -328,6 +384,15 @@ public class RavelasoWebClient : IDisposable
     /// </summary>
     /// <param name="locator">The element locator.</param>
     /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+    /// <example>
+    /// <code>
+    /// // Get the text of a heading
+    /// var title = client.GetText(Loc.Tag("h1").Class("ng-binding"));
+    ///
+    /// // Get text with extended timeout
+    /// var msg = client.GetText(Loc.Id("status"), TimeSpan.FromSeconds(15));
+    /// </code>
+    /// </example>
     public string GetText(By locator, TimeSpan? timeout = null)
     {
         BeforeStep();
@@ -347,6 +412,15 @@ public class RavelasoWebClient : IDisposable
     /// <param name="locator">The element locator.</param>
     /// <param name="attributeName">The attribute name (e.g., "value", "href", "data-id").</param>
     /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+    /// <example>
+    /// <code>
+    /// // Get the href of a link
+    /// var url = client.GetAttribute(Loc.Tag("a").Attr("data-t-id", "nav-link"), "href");
+    ///
+    /// // Get the value of an input
+    /// var val = client.GetAttribute(Loc.Id("username"), "value");
+    /// </code>
+    /// </example>
     public string? GetAttribute(By locator, string attributeName, TimeSpan? timeout = null)
     {
         BeforeStep();
@@ -362,6 +436,13 @@ public class RavelasoWebClient : IDisposable
     /// </summary>
     /// <param name="locator">The element locator.</param>
     /// <returns>True if the element is found; false otherwise.</returns>
+    /// <example>
+    /// <code>
+    /// // Check if login page is displayed
+    /// if (client.Exists(Loc.Id("btnLogin")))
+    ///     Console.WriteLine("Login page");
+    /// </code>
+    /// </example>
     public bool Exists(By locator)
         => Exists(locator, TimeSpan.Zero);
 
@@ -454,6 +535,15 @@ public class RavelasoWebClient : IDisposable
     /// <param name="targetLocator">Locator for the element to find inside the shadow root.</param>
     /// <param name="timeout">Optional custom timeout. If null, uses <see cref="ElementWaitTimeout"/>.</param>
     /// <returns>The found element.</returns>
+    /// <example>
+    /// <code>
+    /// // Find an element inside a Web Component's shadow root
+    /// var link = client.FindInShadowRoot(
+    ///     By.CssSelector("alusta-navigation"),
+    ///     Loc.Tag("a").Attr("href", "/ap/"));
+    /// Console.WriteLine(link.Text);
+    /// </code>
+    /// </example>
     public IWebElement FindInShadowRoot(By hostLocator, By targetLocator, TimeSpan? timeout = null)
     {
         BeforeStep();
@@ -518,6 +608,14 @@ public class RavelasoWebClient : IDisposable
     /// <param name="hostLocator">Locator for the host element that owns the shadow root.</param>
     /// <param name="targetLocator">Locator for the element to find inside the shadow root.</param>
     /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+    /// <example>
+    /// <code>
+    /// // Click a link inside a Web Component's shadow root
+    /// client.ClickShadow(
+    ///     By.CssSelector("alusta-navigation"),
+    ///     Loc.Tag("a").Attr("href", "/ap/"));
+    /// </code>
+    /// </example>
     public void ClickShadow(By hostLocator, By targetLocator, TimeSpan? timeout = null)
     {
         BeforeStep();
@@ -556,6 +654,14 @@ public class RavelasoWebClient : IDisposable
     /// </summary>
     /// <param name="locator">The element locator.</param>
     /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+    /// <example>
+    /// <code>
+    /// // Hover over an input to reveal a clear button
+    /// client.Hover(Loc.Tag("div").Attr("data-t-id", "date-rangepicker-inputs"));
+    /// System.Threading.Thread.Sleep(300);
+    /// client.ClickJs(Loc.Tag("button").Attr("data-t-id", "clear-datepicker"));
+    /// </code>
+    /// </example>
     public void Hover(By locator, TimeSpan? timeout = null)
     {
         BeforeStep();
@@ -577,7 +683,15 @@ public class RavelasoWebClient : IDisposable
     /// <param name="buttonLocator">The element to click.</param>
     /// <param name="hoverTarget">Optional element to hover in order to reveal the button. If null, auto-discovered.</param>
     /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
-    public void HoverAndClick(By buttonLocator, By hoverTarget, TimeSpan? timeout = null)
+    /// <example>
+    /// <code>
+    /// // Hover and click a hover-revealed clear button
+    /// var clearBtn = Loc.Tag("button").Attr("data-t-id", "clear-datepicker").Attr("aria-label", "Clear");
+    /// var inputs = Loc.Tag("div").Attr("data-t-id", "date-rangepicker-inputs");
+    /// client.HoverAndClick(clearBtn, inputs);
+    /// </code>
+    /// </example>
+    private void HoverAndClick(By buttonLocator, By hoverTarget, TimeSpan? timeout = null)
     {
         BeforeStep();
 
@@ -718,19 +832,23 @@ public class RavelasoWebClient : IDisposable
     /// </summary>
     /// <param name="locator">The element locator.</param>
     /// <summary>
-    /// Clicks an element using JavaScript, bypassing hit-testing and any
-    /// overlapping element that would intercept a native click.
-    /// </summary>
-    /// <param name="locator">The element locator.</param>
-    /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
     /// <summary>
     /// Clicks an element using JavaScript, bypassing hit-testing and any
     /// overlapping element that would intercept a native click.
-    /// Tries native .click() first, then dispatchEvent as fallback for
-    /// frameworks that use event delegation (React, some Angular components).
+    /// Simple doc-style: find element, then arguments[0].click().
+    /// Retries automatically on StaleElementReferenceException (Angular re-render).
     /// </summary>
     /// <param name="locator">The element locator.</param>
     /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+    /// <example>
+    /// <code>
+    /// // Click a hidden or intercepted button
+    /// client.ClickJs(Loc.Tag("button").Attr("data-t-id", "clear-datepicker"));
+    ///
+    /// // Click with extended timeout
+    /// client.ClickJs(Loc.Tag("a").Attr("href", "/ap/"), TimeSpan.FromSeconds(15));
+    /// </code>
+    /// </example>
     public void ClickJs(By locator, TimeSpan? timeout = null)
     {
         BeforeStep();
@@ -781,7 +899,16 @@ public class RavelasoWebClient : IDisposable
     /// </summary>
     /// <param name="buttonCss">CSS selector of the button to click.</param>
     /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
-    public void ClickHiddenJs(string buttonCss, TimeSpan? timeout = null)
+    /// <example>
+    /// <code>
+    /// // Click a hover-revealed clear button
+    /// client.ClickHiddenJs("button[data-t-id='clear-datepicker'][aria-label='Clear']");
+    ///
+    /// // With extended timeout
+    /// client.ClickHiddenJs("button[data-t-id='clear-datepicker']", TimeSpan.FromSeconds(15));
+    /// </code>
+    /// </example>
+    private void ClickHiddenJs(string buttonCss, TimeSpan? timeout = null)
     {
         BeforeStep();
         var js = (IJavaScriptExecutor)_driver;
@@ -823,7 +950,7 @@ public class RavelasoWebClient : IDisposable
     /// </summary>
     /// <param name="button">Locator of the button to click.</param>
     /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
-    public void ClickHiddenJs(Locator button, TimeSpan? timeout = null)
+    private void ClickHiddenJs(Locator button, TimeSpan? timeout = null)
     {
         var (bMech, bCrit) = GetJsSelector((By)button);
         if (bMech != "css selector")
@@ -1019,7 +1146,7 @@ public class RavelasoWebClient : IDisposable
     /// <param name="inputLocator">Locator for the input whose value should be cleared.</param>
     /// <param name="hoverTargetLocator">Optional locator of the element to hover to reveal the button.</param>
     /// <returns>A multi-line diagnostic report.</returns>
-    public string DiagnoseClearButton(By clearBtnLocator, By inputLocator, By? hoverTargetLocator = null)
+    private string DiagnoseClearButton(By clearBtnLocator, By inputLocator, By? hoverTargetLocator = null)
     {
         BeforeStep();
         var js = (IJavaScriptExecutor)_driver;
@@ -1269,6 +1396,21 @@ public class RavelasoWebClient : IDisposable
     /// </summary>
     /// <param name="anchorPoint">The locator for the anchor reference element.</param>
     /// <returns>A new AnchorLocator configured with this client's driver and the anchor point.</returns>
+    /// <example>
+    /// <code>
+    /// // Single anchor
+    /// var welcome = client.CreateAnchor(Loc.Class("tasks-container-title").Tag("div"))
+    ///     .Find(Loc.Tag("h1").Class("ng-binding"))
+    ///     .Resolve();
+    ///
+    /// // Chained anchors
+    /// var cell = client.CreateAnchor(Loc.Tag("span").Text("108068_53467"))
+    ///     .CreateAnchor(Loc.Tag("span").Text("26702173"))
+    ///     .Find(Loc.Tag("span").Text("187.30"))
+    ///     .Resolve();
+    /// client.Click(cell);
+    /// </code>
+    /// </example>
     public AnchorLocator CreateAnchor(Locator anchorPoint)
     {
         return new AnchorLocator(_driver, anchorPoint);

@@ -47,6 +47,14 @@ public class AnchorLocator
     /// <param name="target">The locator for the target element to find.</param>
     /// <returns>This AnchorLocator instance for method chaining.</returns>
     /// <exception cref="ArgumentNullException">If target is null.</exception>
+    /// <example>
+    /// <code>
+    /// // Find an h1 inside a div container
+    /// var anchor = client.CreateAnchor(Loc.Class("tasks-container-title").Tag("div"))
+    ///     .Find(Loc.Tag("h1").Class("ng-binding"))
+    ///     .Resolve();
+    /// </code>
+    /// </example>
     public AnchorLocator Find(Locator target)
     {
         _target = target ?? throw new ArgumentNullException(nameof(target));
@@ -67,6 +75,15 @@ public class AnchorLocator
     /// <param name="anchor">The additional anchor locator.</param>
     /// <returns>This AnchorLocator instance for method chaining.</returns>
     /// <exception cref="ArgumentNullException">If anchor is null.</exception>
+    /// <example>
+    /// <code>
+    /// // Chain multiple anchors: supplier -> invoice -> gross sum
+    /// var cell = client.CreateAnchor(Loc.Tag("span").Text("108068_53467"))
+    ///     .CreateAnchor(Loc.Tag("span").Text("26702173"))
+    ///     .Find(Loc.Tag("span").Text("187.30"))
+    ///     .Resolve();
+    /// </code>
+    /// </example>
     public AnchorLocator CreateAnchor(Locator anchor)
     {
         _anchors.Add(anchor ?? throw new ArgumentNullException(nameof(anchor)));
@@ -126,6 +143,15 @@ public class AnchorLocator
     /// <exception cref="InvalidOperationException">If Find() was not called before Resolve().</exception>
     /// <exception cref="NoSuchElementException">If no target element is found in any of the tried directions.</exception>
     /// <exception cref="TimeoutException">If the search exceeds the specified timeout.</exception>
+    /// <example>
+    /// <code>
+    /// // Find welcome message in a container
+    /// var welcome = client.CreateAnchor(Loc.Class("tasks-container-title").Tag("div"))
+    ///     .Find(Loc.Tag("h1").Class("ng-binding"))
+    ///     .Resolve();
+    /// client.Click(welcome);
+    /// </code>
+    /// </example>
     public Locator Resolve()
     {
         if (_target == null)
