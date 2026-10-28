@@ -61,4 +61,11 @@ public class BrowserOptions
     /// Extra command-line arguments for the webBrowser (e.g., ["--no-sandbox", "--disable-blink-features=AutomationControlled"]).
     /// </summary>
     public List<string> ExtraArguments { get; } = new();
+
+    /// <summary>
+    /// Remote debugging address to attach to an existing browser instance
+    /// (e.g. "localhost:9222"). If set, no new browser is launched;
+    /// the driver connects to the already-running browser.
+    /// </summary>
+    public string? DebuggerAddress { get; set; }
 }

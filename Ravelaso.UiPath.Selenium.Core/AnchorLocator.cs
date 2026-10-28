@@ -331,7 +331,8 @@ public class AnchorLocator
         {
             Direction.Innermost => IsDescendant(driver, anchor, candidate),
             Direction.SameRow => SameAncestor(driver, anchor, candidate, "tr"),
-            Direction.SameContainer => SameAncestor(driver, anchor, candidate, "div,section,article,main,form"),
+            Direction.SameContainer => SameAncestor(driver, anchor, candidate, "div,section,article,main,form,tr")
+                && SameRowContainer(driver, anchor, candidate),
             Direction.Right => IsSpatiallyInDirection(driver, anchor, candidate, Direction.Right),
             Direction.Left => IsSpatiallyInDirection(driver, anchor, candidate, Direction.Left),
             Direction.Below => IsSpatiallyInDirection(driver, anchor, candidate, Direction.Below),
@@ -368,35 +369,66 @@ public class AnchorLocator
         try
         {
             var js = (IJavaScriptExecutor)driver;
-            var ancestorA = js.ExecuteScript(
-                "function nearest(e, list) {" +
-                "  var p = e.parentElement;" +
-                "  while (p && p !== document.body) {" +
-                "    var t = p.tagName ? p.tagName.toLowerCase() : '';" +
-                "    if (list.indexOf(t) !== -1) return p;" +
-                "    p = p.parentElement;" +
-                "  }" +
-                "  return null;" +
-                "}" +
-                "return nearest(arguments[0], arguments[1].split(','));",
-                a, tags) as IWebElement;
-            var ancestorB = js.ExecuteScript(
-                "function nearest(e, list) {" +
-                "  var p = e.parentElement;" +
-                "  while (p && p !== document.body) {" +
-                "    var t = p.tagName ? p.tagName.toLowerCase() : '';" +
-                "    if (list.indexOf(t) !== -1) return p;" +
-                "    p = p.parentElement;" +
-                "  }" +
-                "  return null;" +
-                "}" +
-                "return nearest(arguments[0], arguments[1].split(','));",
-                b, tags) as IWebElement;
+            // Find the lowest common ancestor (LCA) of a and b.
+            var lca = js.ExecuteScript(
+                "var a = arguments[0], b = arguments[1];" +
+                "var ancestors = new Set();" +
+                "var p = a;" +
+                "while (p) { ancestors.add(p); p = p.parentElement; }" +
+                "p = b;" +
+                "while (p) { if (ancestors.has(p)) return p; p = p.parentElement; }" +
+                "return null;", a, b) as IWebElement;
 
-            if (ancestorA == null || ancestorB == null)
+            if (lca == null)
                 return false;
 
-            return ancestorA.Equals(ancestorB);
+            // Check if the LCA's tag is one of the requested tags.
+            var tagName = (js.ExecuteScript(
+                "return arguments[0].tagName ? arguments[0].tagName.toLowerCase() : '';", lca) as string) ?? "";
+            var tagList = tags.Split(',');
+            if (!tagList.Contains(tagName))
+                return false;
+
+            // For ag-grid: if the LCA is a row container, they share a row.
+            // If it's a higher container, they share a broader container.
+            // Either way, they share the LCA container.
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Returns true when both elements are in the same row container.
+    /// For ag-grid (div-based) this means sharing the same div[role='row'] or tr ancestor.
+    /// For normal HTML tables this means sharing the same tr ancestor.
+    /// </summary>
+    private static bool SameRowContainer(IWebDriver driver, IWebElement a, IWebElement b)
+    {
+        try
+        {
+            var js = (IJavaScriptExecutor)driver;
+            var rowA = js.ExecuteScript(
+                "var e=arguments[0];" +
+                "while(e && e !== document.body) {" +
+                "  if (e.getAttribute && (e.getAttribute('role') === 'row' || e.tagName.toLowerCase() === 'tr')) return e;" +
+                "  e = e.parentElement;" +
+                "}" +
+                "return null;", a) as IWebElement;
+            var rowB = js.ExecuteScript(
+                "var e=arguments[0];" +
+                "while(e && e !== document.body) {" +
+                "  if (e.getAttribute && (e.getAttribute('role') === 'row' || e.tagName.toLowerCase() === 'tr')) return e;" +
+                "  e = e.parentElement;" +
+                "}" +
+                "return null;", b) as IWebElement;
+
+            if (rowA == null || rowB == null)
+                return false;
+
+            return rowA.Equals(rowB);
         }
         catch
         {
@@ -423,6 +455,10 @@ public class AnchorLocator
 
         var verticallyOverlaps = c.Y < a.Y + a.Height && c.Y + c.Height > a.Y;
         var horizontallyOverlaps = c.X < a.X + a.Width && c.X + c.Width > a.X;
+
+        // Require same row container (critical for ag-grid and dense tables)
+        if (!SameRowContainer(driver, anchor, candidate))
+            return false;
 
         var rowToleranceOk = verticallyOverlaps || Math.Abs(candidateCenterY - anchorCenterY) <= Math.Max(a.Height, c.Height) + 4;
         var columnToleranceOk = horizontallyOverlaps || Math.Abs(candidateCenterX - anchorCenterX) <= Math.Max(a.Width, c.Width) + 4;

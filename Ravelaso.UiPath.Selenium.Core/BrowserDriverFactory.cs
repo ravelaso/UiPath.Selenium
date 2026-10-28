@@ -31,7 +31,7 @@ public static class BrowserDriverFactory
 
         ApplyTimeouts(driver, options);
 
-        if (options.Maximize && !options.Headless)
+        if (string.IsNullOrWhiteSpace(options.DebuggerAddress) && options.Maximize && !options.Headless)
         {
             try { driver.Manage().Window.Maximize(); }
             catch (WebDriverException) { /* Window may not be available */ }
@@ -43,36 +43,52 @@ public static class BrowserDriverFactory
     private static IWebDriver CreateChrome(BrowserOptions options)
     {
         var chromeOptions = new ChromeOptions();
-        
-        if (options.Headless)
-            chromeOptions.AddArgument("--headless=new");
-        
-        chromeOptions.AddArgument($"--window-size={options.WindowWidth},{options.WindowHeight}");
-        
-        if (!string.IsNullOrWhiteSpace(options.BinaryPath))
-            chromeOptions.BinaryLocation = options.BinaryPath;
-        
-        foreach (var arg in options.ExtraArguments)
-            chromeOptions.AddArgument(arg);
-        
+
+        if (!string.IsNullOrWhiteSpace(options.DebuggerAddress))
+        {
+            // Attach to an already-running browser
+            chromeOptions.DebuggerAddress = options.DebuggerAddress;
+        }
+        else
+        {
+            if (options.Headless)
+                chromeOptions.AddArgument("--headless=new");
+
+            chromeOptions.AddArgument($"--window-size={options.WindowWidth},{options.WindowHeight}");
+
+            if (!string.IsNullOrWhiteSpace(options.BinaryPath))
+                chromeOptions.BinaryLocation = options.BinaryPath;
+
+            foreach (var arg in options.ExtraArguments)
+                chromeOptions.AddArgument(arg);
+        }
+
         return new ChromeDriver(chromeOptions);
     }
 
     private static IWebDriver CreateEdge(BrowserOptions options)
     {
         var edgeOptions = new EdgeOptions();
-        
-        if (options.Headless)
-            edgeOptions.AddArgument("--headless=new");
-        
-        edgeOptions.AddArgument($"--window-size={options.WindowWidth},{options.WindowHeight}");
-        
-        if (!string.IsNullOrWhiteSpace(options.BinaryPath))
-            edgeOptions.BinaryLocation = options.BinaryPath;
-        
-        foreach (var arg in options.ExtraArguments)
-            edgeOptions.AddArgument(arg);
-        
+
+        if (!string.IsNullOrWhiteSpace(options.DebuggerAddress))
+        {
+            // Attach to an already-running browser
+            edgeOptions.DebuggerAddress = options.DebuggerAddress;
+        }
+        else
+        {
+            if (options.Headless)
+                edgeOptions.AddArgument("--headless=new");
+
+            edgeOptions.AddArgument($"--window-size={options.WindowWidth},{options.WindowHeight}");
+
+            if (!string.IsNullOrWhiteSpace(options.BinaryPath))
+                edgeOptions.BinaryLocation = options.BinaryPath;
+
+            foreach (var arg in options.ExtraArguments)
+                edgeOptions.AddArgument(arg);
+        }
+
         return new EdgeDriver(edgeOptions);
     }
 
