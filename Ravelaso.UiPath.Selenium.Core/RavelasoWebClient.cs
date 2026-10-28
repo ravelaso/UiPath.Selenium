@@ -866,6 +866,147 @@ public class RavelasoWebClient : IDisposable
     /// <param name="locator">The element locator.</param>
     public void ClickJs(Locator locator, TimeSpan? timeout = null) => ClickJs(locator.ToBy(), timeout);
 
+    /// <summary>
+    /// Clicks a hidden/intercepted element by trying multiple strategies in sequence.
+    /// Each strategy is attempted; only NoSuchElementException is caught (expected when
+    /// a previous strategy already removed the element). Any other exception is
+    /// propagated. If the element still exists after all strategies, a RavelasoException
+    /// is thrown.
+    /// </summary>
+    /// <param name="locator">The element locator.</param>
+    /// <param name="hoverTarget">Optional locator of the element to hover to reveal <paramref name="locator"/>.</param>
+    /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+    public void ClickHidden(By locator, By? hoverTarget = null, TimeSpan? timeout = null)
+    {
+        BeforeStep();
+        var js = (IJavaScriptExecutor)_driver;
+
+        // Helper: hover if target is available
+        Action tryHover = () =>
+        {
+            if (hoverTarget != null)
+            {
+                try
+                {
+                    var ht = WaitElement(hoverTarget, TimeSpan.Zero);
+                    new Actions(_driver).MoveToElement(ht).Perform();
+                    Thread.Sleep(300);
+                }
+                catch { }
+            }
+        };
+
+        // Estrategia 1: Hover + Force + .click() (la que funciona)
+        try
+        {
+            tryHover();
+            var btn = WaitElement(locator, TimeSpan.Zero);
+            js.ExecuteScript(
+                "var e=arguments[0]; e.style.opacity='1'; e.style.visibility='visible';" +
+                "e.style.display='inline-block'; e.style.pointerEvents='auto';" +
+                "e.classList.remove('ng-hide');", btn);
+            Thread.Sleep(50);
+            btn = WaitElement(locator, TimeSpan.Zero);
+            js.ExecuteScript("arguments[0].click();", btn);
+            Thread.Sleep(500);
+            // Early return: si el botón fue removido, éxito
+            try { WaitElement(locator, TimeSpan.Zero); } catch (NoSuchElementException) { return; }
+        }
+        catch (NoSuchElementException) { return; /* ya removido por estrategia anterior */ }
+        catch (Exception ex) { throw new RavelasoException("ClickHidden Strategy 1 failed.", ex); }
+
+        // Estrategia 2: dispatchEvent MouseEvent completo
+        try
+        {
+            var btn = WaitElement(locator, TimeSpan.Zero);
+            js.ExecuteScript(
+                "var e=arguments[0];" +
+                "e.style.opacity='1'; e.style.visibility='visible';" +
+                "e.style.display='inline-block'; e.style.pointerEvents='auto';" +
+                "e.classList.remove('ng-hide');" +
+                "['mousedown','mouseup','click'].forEach(function(t){e.dispatchEvent(new MouseEvent(t,{bubbles:true,cancelable:true,view:window}));});", btn);
+            Thread.Sleep(500);
+            try { WaitElement(locator, TimeSpan.Zero); } catch (NoSuchElementException) { return; }
+        }
+        catch (NoSuchElementException) { return; }
+        catch (Exception ex) { throw new RavelasoException("ClickHidden Strategy 2 failed.", ex); }
+
+        // Estrategia 3: ClickJs (find + .click())
+        try
+        {
+            ClickJs(locator, TimeSpan.FromSeconds(5));
+            Thread.Sleep(500);
+            try { WaitElement(locator, TimeSpan.Zero); } catch (NoSuchElementException) { return; }
+        }
+        catch (NoSuchElementException) { return; }
+        catch (Exception ex) { throw new RavelasoException("ClickHidden Strategy 3 failed.", ex); }
+
+        // Estrategia 4: force+click via JS single script
+        try
+        {
+            var btnEl = WaitElement(locator, TimeSpan.Zero);
+            js.ExecuteScript(
+                "var e=arguments[0];" +
+                "e.style.opacity='1'; e.style.visibility='visible';" +
+                "e.style.display='inline-block'; e.style.pointerEvents='auto';" +
+                "e.classList.remove('ng-hide');" +
+                "e.click();", btnEl);
+            Thread.Sleep(500);
+            try { WaitElement(locator, TimeSpan.Zero); } catch (NoSuchElementException) { return; }
+        }
+        catch (NoSuchElementException) { return; }
+        catch (Exception ex) { throw new RavelasoException("ClickHidden Strategy 4 failed.", ex); }
+
+        // Estrategia 5: HoverAndClick (solo si hay hoverTarget)
+        if (hoverTarget != null)
+        {
+            try
+            {
+                HoverAndClick(locator, hoverTarget, TimeSpan.FromSeconds(5));
+                Thread.Sleep(500);
+                try { WaitElement(locator, TimeSpan.Zero); } catch (NoSuchElementException) { return; }
+            }
+            catch (NoSuchElementException) { return; }
+            catch (Exception ex) { throw new RavelasoException("ClickHidden Strategy 5 failed.", ex); }
+        }
+
+        // Si llegamos aquí, ninguna estrategia funcionó
+        throw new RavelasoException(
+            "ClickHidden: no strategy succeeded in clicking the element. " +
+            "The element is still present in the DOM.");
+    }
+
+    /// <summary>
+    /// Clicks a hidden/intercepted element (Locator overload).
+    /// </summary>
+    public void ClickHidden(Locator locator, Locator? hoverTarget = null, TimeSpan? timeout = null)
+        => ClickHidden(locator.ToBy(), hoverTarget?.ToBy(), timeout);
+
+    /// <summary>
+    /// Clicks a hidden/intercepted element (IWebElement hover target overload).
+    /// </summary>
+    public void ClickHidden(By locator, IWebElement hoverTarget, TimeSpan? timeout = null)
+    {
+        BeforeStep();
+        try { new Actions(_driver).MoveToElement(hoverTarget).Perform(); } catch (Exception ex)
+        {
+            throw new RavelasoException("ClickHidden: failed to hover the target element.", ex);
+        }
+        Thread.Sleep(150);
+
+        var element = WaitElement(locator, timeout);
+        var js = (IJavaScriptExecutor)_driver;
+        js.ExecuteScript(
+            "var e=arguments[0];" +
+            "e.style.opacity='1'; e.style.visibility='visible';" +
+            "e.style.display='inline-block'; e.style.pointerEvents='auto';" +
+            "e.classList.remove('ng-hide');", element);
+        Thread.Sleep(50);
+
+        element = WaitElement(locator, timeout);
+        js.ExecuteScript("arguments[0].click();", element);
+    }
+
     #endregion
     #region Diagnostics
 
