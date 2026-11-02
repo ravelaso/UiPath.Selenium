@@ -601,6 +601,59 @@ public class RavelasoWebClient : IDisposable
         catch (NotFoundException) { return false; }
     }
 
+    /// <summary>
+    /// Waits for an anchored element to appear, without requiring the caller to call
+    /// <see cref="AnchorLocator.Resolve"/>. Returns true as soon as the anchor resolves.
+    /// </summary>
+    /// <param name="anchor">The anchor locator to resolve.</param>
+    /// <param name="timeout">Maximum time to wait. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+    /// <returns>True if the anchored element appears within the timeout; false otherwise.</returns>
+    public bool WaitFor(AnchorLocator anchor, TimeSpan? timeout = null)
+    {
+        BeforeStep();
+
+        if (anchor == null)
+            throw new ArgumentNullException(nameof(anchor));
+
+        var effectiveTimeout = timeout ?? (ElementWaitTimeout > TimeSpan.Zero ? ElementWaitTimeout : TimeSpan.FromSeconds(60));
+        try
+        {
+            anchor.WithTimeout(effectiveTimeout).Resolve();
+            return true;
+        }
+        catch (NoSuchElementException) { return false; }
+        catch (WebDriverTimeoutException) { return false; }
+        catch (NotFoundException) { return false; }
+    }
+
+    /// <summary>
+    /// Checks whether an anchored element appears within the specified timeout,
+    /// without requiring the caller to call <see cref="AnchorLocator.Resolve"/>.
+    /// </summary>
+    /// <param name="anchor">The anchor locator to resolve.</param>
+    /// <param name="timeout">Maximum time to wait. If null, performs an immediate check.</param>
+    /// <returns>True if the anchored element appears within the timeout; false otherwise.</returns>
+    public bool Exists(AnchorLocator anchor, TimeSpan? timeout = null)
+    {
+        BeforeStep();
+
+        if (anchor == null)
+            throw new ArgumentNullException(nameof(anchor));
+
+        var effectiveTimeout = timeout.HasValue && timeout.Value > TimeSpan.Zero
+            ? timeout.Value
+            : TimeSpan.FromMilliseconds(1);
+
+        try
+        {
+            anchor.WithTimeout(effectiveTimeout).Resolve();
+            return true;
+        }
+        catch (NoSuchElementException) { return false; }
+        catch (WebDriverTimeoutException) { return false; }
+        catch (NotFoundException) { return false; }
+    }
+
     #endregion
 
     #region Shadow DOM
