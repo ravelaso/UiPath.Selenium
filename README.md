@@ -2,6 +2,8 @@
 
 Selenium WebDriver wrapper for .NET that simplifies web automation in UiPath Studio 25.10 and .NET projects.
 
+THIS IS WORK IN PROGRESS! Please do not take it seriously for now until a stable release is ready. API may change!
+
 ---
 
 ## What is it?
