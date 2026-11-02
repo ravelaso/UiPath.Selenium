@@ -16,4 +16,4 @@ dist/
 *.nupkg
 *.snupkg
 
-Ravelaso.UiPath.Selenium.Tests/Program.cs
+InternalTest/*
