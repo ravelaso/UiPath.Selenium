@@ -41,8 +41,22 @@ public sealed class Locator
     /// <summary>Add an id attribute condition.</summary>
     public Locator Id(string id) => new(PartKind.Id, id, null, this);
 
-    /// <summary>Add a CSS class condition (exact token match).</summary>
-    public Locator Class(string className) => new(PartKind.Class, className, null, this);
+    /// <summary>
+    /// Add one or more CSS class conditions (exact token matches).
+    /// Whitespace-separated class names are split into individual conditions,
+    /// so <c>Loc.Tag("button").Class("a b")</c> requires both classes.
+    /// </summary>
+    public Locator Class(string className)
+    {
+        if (string.IsNullOrWhiteSpace(className))
+            throw new ArgumentException("Class name cannot be empty.", nameof(className));
+
+        var result = this;
+        foreach (var token in className.Split(new[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+            result = new(PartKind.Class, token, null, result);
+
+        return result;
+    }
 
     /// <summary>Add a name attribute condition.</summary>
     public Locator Name(string name) => new(PartKind.Name, name, null, this);

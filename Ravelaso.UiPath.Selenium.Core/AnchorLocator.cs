@@ -177,8 +177,10 @@ public class AnchorLocator
                 // SupplierCode -> InvoiceNumber) work even when the first anchor
                 // matches several elements.
                 var finalAnchors = ResolveAnchorChain(structural);
-                if (finalAnchors.Count == 0 && _anchors.Count > 0)
-                    finalAnchors = _driver.FindElements(_anchors[0].ToBy()).ToList();
+
+                // Do not silently fall back to a global first-anchor search: if the
+                // anchor chain could not be resolved, keep polling and report the
+                // failure explicitly after the timeout.
 
                 // 1. Structural/spatial directions across ALL final anchors.
                 foreach (var anchorElement in finalAnchors)
@@ -200,8 +202,9 @@ public class AnchorLocator
                     }
                 }
 
-                // 2. Global fallback (Anywhere) only if requested and no structural match.
-                if (hasAnywhere && targetElements.Count > 0)
+                // 2. Global fallback (Anywhere) only if requested, anchors resolved,
+                // and no structural match was found.
+                if (hasAnywhere && targetElements.Count > 0 && finalAnchors.Count > 0)
                 {
                     IWebElement chosen;
                     if (finalAnchors.Count > 0)
@@ -223,13 +226,25 @@ public class AnchorLocator
             Thread.Sleep(pollInterval);
         }
 
-        // Nothing found in any direction within the timeout.
+        // Nothing found in any direction within the timeout. Recompute diagnostic
+        // counts so callers can distinguish a bad anchor from a bad target.
+        var firstAnchorCandidates = _anchors.Count > 0
+            ? _driver.FindElements(_anchors[0].ToBy()).Count
+            : 0;
+        var resolvedAnchorChains = ResolveAnchorChain(structural).Count;
+        var targetCandidates = _driver.FindElements(targetBy).Count;
+
         throw new NoSuchElementException(
             $"Anchor search failed: could not find target relative to anchor.\n" +
             $"Anchors: {string.Join(" -> ", _anchors)}\n" +
             $"Target: {targetBy}\n" +
             $"Directions tried: {string.Join(", ", directionsToTry)}\n" +
-            $"Timeout: {_timeout.TotalSeconds}s"
+            $"First anchor candidates: {firstAnchorCandidates}\n" +
+            $"Resolved anchor chains: {resolvedAnchorChains}\n" +
+            $"Target candidates: {targetCandidates}\n" +
+            $"Timeout: {_timeout.TotalSeconds}s\n" +
+            "Hints: 0 first-anchor candidates usually means the anchor locator/tag is wrong; " +
+            "0 target candidates usually means the target locator (often a multi-class Class()) is wrong."
         );
     }
 

@@ -15,9 +15,23 @@ public static class Loc
     /// <example><c>Loc.Name("password")</c></example>
     public static Locator Name(string name) => new(Locator.PartKind.Name, name);
 
-    /// <summary>Create a locator by CSS class (exact token match).</summary>
+    /// <summary>
+    /// Create a locator by CSS class (exact token match).
+    /// Whitespace-separated class names are split into individual conditions,
+    /// so <c>Loc.Class("a b")</c> requires both classes.
+    /// </summary>
     /// <example><c>Loc.Class("btn-primary")</c></example>
-    public static Locator Class(string className) => new(Locator.PartKind.Class, className);
+    public static Locator Class(string className)
+    {
+        if (string.IsNullOrWhiteSpace(className))
+            throw new ArgumentException("Class name cannot be empty.", nameof(className));
+
+        Locator? result = null;
+        foreach (var token in className.Split(new[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+            result = new Locator(Locator.PartKind.Class, token, null, result);
+
+        return result!;
+    }
 
     /// <summary>Create a locator by HTML tag name.</summary>
     /// <example><c>Loc.Tag("button")</c></example>
