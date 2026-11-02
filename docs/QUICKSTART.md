@@ -1,526 +1,256 @@
-# Quick Start Guide
+# Quick Start
 
-Code examples for `Ravelaso.UiPath.Selenium`.
+This guide shows the most common ways to use `Ravelaso.UiPath.Selenium` with the current API. All examples use generic values so they can be adapted to your own application.
 
----
+## 1. Create a client
 
-## Installation
-
-Add to your `.csproj`:
-
-```xml
-<ItemGroup>
-  <ProjectReference Include="path/to/Ravelaso.UiPath.Selenium.Core.csproj" />
-</ItemGroup>
-```
-
-Or reference the compiled NuGet (when published).
-
----
-
-## Example 1: Simple Navigation & Form Fill
-
-```csharp
-using Ravelaso.UiPath.Selenium.Core;
-
-var client = new RavelasoWebClient(BrowserType.Chrome);
-
-try
-{
-    // Navigate
-    client.Navigate("https://example.com/login");
-    Console.WriteLine($"Title: {client.GetTitle()}");
-
-    // Fill form
-    if (client.Exists(Loc.Id("username")))
-    {
-        client.Type(Loc.Id("username"), "john.doe");
-        client.Type(Loc.Id("password"), "secret123", clear: true);
-        
-        // Click submit
-        client.Click(Loc.Css("button.submit"));
-        
-        // Wait for result
-        if (client.WaitFor(Loc.Id("success-message"), TimeSpan.FromSeconds(10)))
-            Console.WriteLine(client.GetText(Loc.Id("success-message")));
-    }
-}
-finally
-{
-    client.Dispose();
-}
-```
-
----
-
-## Example 2: Advanced Locators
-
-```csharp
-using Ravelaso.UiPath.Selenium.Core;
-
-var client = new RavelasoWebClient(BrowserType.Edge, new BrowserOptions 
-{ 
-    Headless = true,
-    GlobalDelay = TimeSpan.FromSeconds(1)
-});
-
-try
-{
-    client.Navigate("https://example.com");
-
-    // Single condition → native selector
-    var username = Loc.Id("username");
-
-    // Chained conditions → composite selector
-    var submitBtn = Loc.Tag("button").And.Class("primary").And.Attr("type", "submit");
-
-    // XPath mode
-    var resultDiv = Loc.XPath("//div[@role='alert']").And.Class("success");
-
-    // Dynamic locators (from config, etc.)
-    var locatorType = LocatorType.Id;
-    var elementId = "search-box";
-    var searchBox = Loc.Of(locatorType, elementId);
-
-    // Check existence
-    if (client.Exists(searchBox))
-    {
-        client.Type(searchBox, "selenium");
-        client.Click(submitBtn);
-    }
-}
-finally
-{
-    client.Dispose();
-}
-```
-
----
-
-## Example 3: Dropdown Selection
-
-```csharp
-using Ravelaso.UiPath.Selenium.Core;
-
-var client = new RavelasoWebClient(BrowserType.Firefox);
-
-try
-{
-    client.Navigate("https://example.com/form");
-
-    // Select by value attribute
-    var selected1 = client.Select(Loc.Id("country"), "mx");
-    Console.WriteLine($"Selected by value 'mx': {selected1}");
-
-    // Select by visible text
-    var selected2 = client.Select(Loc.Id("country"), "Mexico");
-    Console.WriteLine($"Selected by text 'Mexico': {selected2}");
-
-    // Select by index
-    var selected3 = client.SelectByIndex(Loc.Id("country"), 2);
-    Console.WriteLine($"Selected by index 2: {selected3}");
-
-    // Get current value
-    var currentValue = client.GetAttribute(Loc.Id("country"), "value");
-    Console.WriteLine($"Current country: {currentValue}");
-}
-finally
-{
-    client.Dispose();
-}
-```
-
----
-
-## Example 4: Screenshots & JavaScript
-
-```csharp
-using Ravelaso.UiPath.Selenium.Core;
-
-var client = new RavelasoWebClient(BrowserType.Chrome);
-
-try
-{
-    client.Navigate("https://example.com");
-
-    // Take screenshot
-    var screenshotPath = client.Screenshot("C:\\screenshots\\page.png");
-    Console.WriteLine($"Screenshot saved: {screenshotPath}");
-
-    // Execute JavaScript
-    var scrollHeight = client.ExecuteScript("return document.body.scrollHeight;");
-    Console.WriteLine($"Page height: {scrollHeight}");
-
-    // Execute JavaScript with arguments
-    var elementCount = client.ExecuteScript(
-        "return document.querySelectorAll(arguments[0]).length;",
-        ".product-item"
-    );
-    Console.WriteLine($"Product items: {elementCount}");
-
-    // Get page HTML
-    var html = client.GetPageSource();
-    Console.WriteLine($"HTML length: {html.Length}");
-}
-finally
-{
-    client.Dispose();
-}
-```
-
----
-
-## Example 5: Conditional Waits
-
-```csharp
-using Ravelaso.UiPath.Selenium.Core;
-
-var client = new RavelasoWebClient(BrowserType.Chrome);
-
-try
-{
-    client.Navigate("https://example.com");
-
-    // Wait for element to appear (default timeout: 10s)
-    if (client.WaitFor(Loc.Id("loading-spinner")))
-    {
-        Console.WriteLine("Spinner appeared");
-    }
-
-    // Custom timeout
-    var resultAppeared = client.WaitFor(
-        Loc.Id("search-results"), 
-        TimeSpan.FromSeconds(30)
-    );
-
-    if (resultAppeared)
-    {
-        var resultText = client.GetText(Loc.Id("search-results"));
-        Console.WriteLine($"Result: {resultText}");
-    }
-    else
-    {
-        Console.WriteLine("Results did not appear in time");
-    }
-
-    // Check if element is displayed (visible)
-    if (client.IsDisplayed(Loc.Id("success-badge")))
-    {
-        Console.WriteLine("Success badge is visible");
-    }
-}
-finally
-{
-    client.Dispose();
-}
-```
-
----
-
-## Example 6: Headless Browser with Custom Options
+### Launch a new browser
 
 ```csharp
 using Ravelaso.UiPath.Selenium.Core;
 
 var options = new BrowserOptions
 {
-    Browser = BrowserType.Chrome,
-    Headless = true,
-    Maximize = false,
-    WindowWidth = 1280,
-    WindowHeight = 720,
-    GlobalDelay = TimeSpan.FromMilliseconds(500),
-    ElementWaitTimeout = TimeSpan.FromSeconds(15),
-    PageLoadTimeout = TimeSpan.FromSeconds(60)
+    Maximize = true,
+    Headless = false,
+    GlobalDelay = TimeSpan.FromSeconds(1),
+    ElementWaitTimeout = TimeSpan.FromSeconds(10)
 };
 
-options.ExtraArguments.Add("--no-sandbox");
-options.ExtraArguments.Add("--disable-dev-shm-usage");
-
-var client = new RavelasoWebClient(BrowserType.Chrome, options);
-
-try
-{
-    client.Navigate("https://example.com");
-
-    // Temporarily disable global delay
-    var originalDelay = client.GlobalDelay;
-    client.GlobalDelay = TimeSpan.Zero;
-    
-    // Fast operations
-    client.Type(Loc.Id("search"), "query");
-    
-    // Re-enable delay
-    client.GlobalDelay = originalDelay;
-    
-    client.Click(Loc.Css("button.search"));
-}
-finally
-{
-    client.Dispose();
-}
+using var client = new RavelasoWebClient(WebBrowser.Edge, options);
 ```
 
----
-
-## Example 7: Error Handling
+### Attach to an already running browser
 
 ```csharp
-using Ravelaso.UiPath.Selenium.Core;
-
-var client = new RavelasoWebClient(BrowserType.Edge);
-
-try
+var options = new BrowserOptions
 {
-    client.Navigate("https://example.com");
+    DebuggerAddress = "localhost:9222",
+    GlobalDelay = TimeSpan.FromSeconds(1),
+    ElementWaitTimeout = TimeSpan.FromSeconds(10)
+};
 
-    // Safe existence check
-    if (!client.Exists(Loc.Id("error-message")))
-    {
-        Console.WriteLine("No error message found");
-    }
-
-    // Safe text retrieval
-    var text = client.Exists(Loc.Id("result")) 
-        ? client.GetText(Loc.Id("result")) 
-        : "Not found";
-
-    // Safe attribute access
-    var href = client.GetAttribute(Loc.Css("a.link"), "href") ?? "No href";
-
-    // Safe timeout handling
-    if (!client.WaitFor(Loc.Id("expensive-element"), TimeSpan.FromSeconds(5)))
-    {
-        Console.WriteLine("Element did not load; proceeding");
-    }
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"Error: {ex.Message}");
-}
-finally
-{
-    try { client.Dispose(); }
-    catch { /* Ignore errors during cleanup */ }
-}
+using var client = new RavelasoWebClient(WebBrowser.Edge, options);
 ```
 
----
+Attaching is useful when the browser is already logged in or controlled by another tool.
 
-## Example 8: UiPath Integration (Pseudo-code)
+## 2. Basic locators
 
 ```csharp
-// In a UiPath .NET Invoke Code activity:
+client.Navigate("https://app.example.com");
 
-using Ravelaso.UiPath.Selenium.Core;
+// Simple locators
+client.Click(Loc.Id("login-button"));
+client.Type(Loc.Id("username"), "user@example.com");
+client.Type(Loc.Id("password"), "password");
 
-// Get browser type from UiPath variable (string)
-var browserInput = in_BrowserType; // "Chrome", "Edge", "Firefox"
-var browser = (BrowserType)Enum.Parse(typeof(BrowserType), browserInput);
+// Chained conditions
+client.Click(Loc.Tag("button").And.Class("primary").And.Attr("type", "submit"));
 
-// Create client
-var client = new RavelasoWebClient(browser);
-
-try
-{
-    // Get URL from UiPath variable
-    client.Navigate(in_URL);
-    
-    // Use locators from UiPath variables
-    client.Type(Loc.Id(in_UsernameFieldId), in_Username);
-    client.Type(Loc.Id(in_PasswordFieldId), in_Password);
-    client.Click(Loc.Id(in_SubmitButtonId));
-    
-    // Wait and capture result
-    if (client.WaitFor(Loc.Id(in_ResultElementId), TimeSpan.FromSeconds(10)))
-    {
-        out_ResultText = client.GetText(Loc.Id(in_ResultElementId));
-        out_Success = true;
-    }
-    else
-    {
-        out_Success = false;
-    }
-}
-catch (Exception ex)
-{
-    out_Error = ex.Message;
-    out_Success = false;
-}
-finally
-{
-    client.Dispose();
-}
+// Text-based locator
+client.Click(Loc.Tag("a").Text("Sign in"));
 ```
 
----
+`Locator` implicitly converts to Selenium `By`, so it can be used directly with client methods.
 
-## Example 9: Anchor System - Table with Dynamic Rows
-
-**Problem:** Table rows reorder daily, need to always download same report.
+## 3. Waits and conditional checks
 
 ```csharp
-using Ravelaso.UiPath.Selenium.Core;
+// Wait up to 10 seconds for an element to appear
+bool loaded = client.WaitFor(Loc.Tag("h1").Text("Dashboard"), TimeSpan.FromSeconds(10));
 
-var client = new RavelasoWebClient(BrowserType.Chrome);
+if (!loaded)
+    throw new TimeoutException("Dashboard did not load.");
 
-try
-{
-    client.Navigate("https://reports.example.com");
+// Immediate existence check
+bool hasError = client.Exists(Loc.Id("error-panel"), TimeSpan.Zero);
 
-    // Find download button in row with date "2026-10-22"
-    // Works even if rows are reordered!
-    var downloadBtn = client.CreateAnchor(Loc.Text("2026-10-22"))
-        .Find(Loc.Css("button.download"))
-        .Resolve();
-
-    client.Click(downloadBtn);
-    
-    Console.WriteLine("Report downloaded!");
-}
-finally
-{
-    client.Dispose();
-}
+// Check visibility
+bool isVisible = client.IsDisplayed(Loc.Id("submit-button"), TimeSpan.FromSeconds(5));
 ```
 
-**HTML:**
-```html
-<table>
-  <tr>
-    <td>Sales Report</td>
-    <td>2026-10-22</td>
-    <td><button class="download">Download</button></td>
-  </tr>
-  <tr>
-    <td>Inventory</td>
-    <td>2026-10-23</td>
-    <td><button class="download">Download</button></td>
-  </tr>
-</table>
-```
+## 4. Anchors
 
----
+Anchors find an element relative to a stable reference element. This is useful for dynamic tables, grids, and forms.
 
-## Example 10: Anchor System - Form with Labels
-
-**Problem:** Form fields are in flexible layout, find input next to label.
+### Single anchor
 
 ```csharp
-using Ravelaso.UiPath.Selenium.Core;
+var title = client
+    .CreateAnchor(Loc.Class("tasks-container-title").Tag("div"))
+    .Find(Loc.Tag("h1").Class("ng-binding"))
+    .Resolve();
 
-var client = new RavelasoWebClient(BrowserType.Edge);
-
-try
-{
-    client.Navigate("https://form.example.com");
-
-    // Find email input by its label
-    var emailInput = client.CreateAnchor(Loc.Text("Email:"))
-        .Find(Loc.Css("input[type='email']"))
-        .Resolve();
-
-    client.Type(emailInput, "user@example.com");
-
-    // Find phone input by its label (may be right or below)
-    var phoneInput = client.CreateAnchor(Loc.Text("Phone:"))
-        .Find(Loc.Css("input[type='tel']"))
-        .SearchOrder(Direction.Right, Direction.Below)  // Try right first
-        .Resolve();
-
-    client.Type(phoneInput, "555-1234");
-    
-    Console.WriteLine("Form filled!");
-}
-finally
-{
-    client.Dispose();
-}
+client.Click(title);
 ```
 
----
+### Chained anchors
 
-## Example 11: Anchor System - List with Actions
-
-**Problem:** Delete specific item from list that changes order.
+Use multiple anchors when one reference is not enough.
 
 ```csharp
-using Ravelaso.UiPath.Selenium.Core;
+var invoiceValue = client
+    .CreateAnchor(Loc.Text("Account 12345"))
+    .CreateAnchor(Loc.Text("Invoice 98765"))
+    .Find(Loc.Text("-1,234.56"))
+    .Resolve();
 
-var client = new RavelasoWebClient(BrowserType.Chrome);
-
-try
-{
-    client.Navigate("https://projects.example.com");
-
-    // Delete "Project Alpha" no matter where it is in the list
-    var deleteBtn = client.CreateAnchor(Loc.Text("Project Alpha"))
-        .Find(Loc.Css("button.delete"))
-        .ExactDirection(Direction.Right)  // Must be to the right
-        .Resolve();
-
-    client.Click(deleteBtn);
-    
-    // Confirm deletion if modal appears
-    if (client.WaitFor(Loc.Id("confirm-dialog"), TimeSpan.FromSeconds(2)))
-    {
-        client.Click(Loc.Css("button.confirm"));
-    }
-    
-    Console.WriteLine("Project deleted!");
-}
-finally
-{
-    client.Dispose();
-}
+client.DoubleClick(invoiceValue);
 ```
 
----
+### Wait for an anchored element
 
-## Tips
+`WaitFor` and `Exists` accept an `AnchorLocator`, so you do not need to call `Resolve()` first.
 
-1. **Always use `using` or `finally` to dispose the client** to close the browser properly.
+```csharp
+bool appeared = client.WaitFor(
+    client
+        .CreateAnchor(Loc.Tag("div").Class("notification-area"))
+        .Find(Loc.Tag("a").Class("download-link").Text("Open download center")),
+    TimeSpan.FromMinutes(2));
 
-2. **Configure `GlobalDelay` sensibly**: 
-   - Development/debugging: `0s` or `1s`
-   - Production/CI: `2-5s` depending on page speed
+if (!appeared)
+    throw new TimeoutException("Notification did not appear.");
+```
 
-3. **Use `Exists(locator, timeout)` for uncertain elements**, but `Exists(locator)` for known elements (faster).
+### Timeout for slow pages
 
-4. **Combine `And` for robust locators**: `Loc.Tag("button").And.Class("submit").And.Attr("type", "button")`
+```csharp
+var element = client
+    .CreateAnchor(Loc.Text("Account 12345"))
+    .Find(Loc.Tag("button").Class("action-button"))
+    .WithTimeout(TimeSpan.FromMinutes(2))
+    .Resolve();
+```
 
-5. **Test with headless** (`Headless = true`) in CI/automation environments.
+## 5. Dynamic table example
 
-6. **Inspect the page** to get correct selectors:
-   - Right-click → Inspect → find `id`, `class`, `data-*` attributes
-   - Use CSS selectors when possible (faster than XPath)
+This pattern is useful when rows move or change every day.
 
----
+```csharp
+client.Navigate("https://app.example.com/reports");
 
-## Troubleshooting
+// Select the download button in the row containing both values.
+var downloadButton = client
+    .CreateAnchor(Loc.Text("Account 12345"))
+    .CreateAnchor(Loc.Text("02/11/2026 02:02"))
+    .Find(Loc.Tag("button").Class("download-button"))
+    .Resolve();
 
-### Element not found despite existing on page
-- Increase `ElementWaitTimeout` or use `WaitFor(locator, largerTimeout)`
-- Check if element is inside an iframe (not supported yet)
-- Check if element is inside a shadow DOM (not supported yet)
+client.Click(downloadButton);
+```
 
-### Global delay seems too slow
-- Set `GlobalDelay = TimeSpan.Zero` if you're using `WaitFor()` exclusively
-- The delay is intentional for robustness in real-world RPA
+The anchor system searches the row containing both reference values and resolves the matching target.
 
-### Screenshot save fails
-- Ensure directory exists; the client creates it automatically
-- Check file permissions
-- Use absolute paths
+## 6. Clicking difficult elements
 
-### Headless mode not working
-- Firefox: ensure geckodriver is in PATH
-- Chrome/Edge: `--headless=new` flag is set automatically
-- Test without headless first to isolate the issue
+### JavaScript click
 
----
+```csharp
+client.ClickJs(Loc.Tag("button").Attr("data-action", "submit"));
+```
 
-For more details, see:
-- [`api.md`](./api.md) — Full API reference
-- [`locators.md`](./locators.md) — Locator builder rules
-- [`plan.md`](./plan.md) — Architecture & design decisions
+### Hidden or intercepted element
+
+```csharp
+var button = Loc.Tag("button").Attr("data-t-id", "clear-filter");
+var container = Loc.Tag("div").Attr("data-t-id", "filter-panel");
+
+client.ClickHidden(button, container);
+```
+
+## 7. Forms and filters
+
+```csharp
+client.Click(Loc.Tag("button").Class("advanced-search").Text("Advanced search"));
+
+client.Type(Loc.Tag("input").Id("startDate"), "01/10/2026");
+client.Type(Loc.Tag("input").Id("endDate"), "31/10/2026");
+
+client.Click(Loc.Tag("button").Class("search-button").Text("Search"));
+```
+
+## 8. Zooming wide tables
+
+```csharp
+// Zoom out to fit more columns into the viewport
+client.SetZoom(0.8);
+
+// Reset to normal zoom
+client.ResetZoom();
+```
+
+Zoom can help anchors and tables that load content based on the visible viewport.
+
+## 9. Downloads
+
+`DownloadFile` downloads a file triggered by an element and saves it to the final destination path.
+
+```csharp
+var downloadButton = client
+    .CreateAnchor(Loc.Text("Account 12345"))
+    .Find(Loc.Tag("button").Class("download-button"))
+    .Resolve();
+
+string savedPath = client.DownloadFile(
+    downloadButton,
+    @"C:\Automation\report.xlsx",
+    TimeSpan.FromMinutes(2));
+
+Console.WriteLine($"Downloaded: {savedPath}");
+```
+
+You can also download from a direct URL:
+
+```csharp
+client.DownloadFromUrl(
+    "https://example.com/files/report.xlsx",
+    @"C:\Automation\report.xlsx");
+```
+
+The library first tries a direct HTTP download using browser cookies. If no URL is available, it uses a runtime Chromium/Edge download fallback.
+
+## 10. Screenshots
+
+```csharp
+string screenshotPath = client.Screenshot(@"C:\Automation\screenshot.png");
+Console.WriteLine(screenshotPath);
+```
+
+## 11. Shadow DOM
+
+The client automatically searches light DOM and open Shadow DOM roots for supported operations.
+
+```csharp
+client.Click(Loc.Tag("button").Attr("data-testid", "shadow-submit"));
+```
+
+## 12. Best practices
+
+- Prefer `Loc.Text(...)` or chained `Loc` conditions over fragile XPath.
+- Use anchors for dynamic tables instead of row indexes.
+- Use `Exists` or `WaitFor` before conditional flows.
+- Use `WithTimeout` for slow or asynchronous pages.
+- Use `SetZoom` before resolving anchors on very wide tables.
+- Keep download destinations explicit and outside browser profile folders.
+- Use `ClickJs` or `ClickHidden` only when normal clicks are intercepted.
+
+## 13. Common troubleshooting
+
+### Anchor throws `NoSuchElementException`
+- Check that the anchor text exactly matches the rendered text.
+- Try `Loc.Text(...)` instead of `Loc.Tag("span").Text(...)` when the tag varies.
+- Increase the timeout with `WithTimeout`.
+- For multi-anchor chains, ensure all reference values are in the same row or container.
+
+### Download fails
+- If the button has no URL, the library uses CDP fallback on Chromium/Edge.
+- Make sure the destination directory can be created.
+- Increase the download timeout for large files.
+- Firefox supports direct-URL downloads only.
+
+### Element is not found
+- Increase `ElementWaitTimeout`.
+- Check whether the element is inside a Shadow DOM or iframe.
+- Verify the locator with `Exists` before clicking.
