@@ -41,8 +41,22 @@ public sealed class Locator
     /// <summary>Add an id attribute condition.</summary>
     public Locator Id(string id) => new(PartKind.Id, id, null, this);
 
-    /// <summary>Add a CSS class condition (exact token match).</summary>
-    public Locator Class(string className) => new(PartKind.Class, className, null, this);
+    /// <summary>
+    /// Add one or more CSS class conditions (exact token matches).
+    /// Whitespace-separated class names are split into individual conditions,
+    /// so <c>Loc.Tag("button").Class("a b")</c> requires both classes.
+    /// </summary>
+    public Locator Class(string className)
+    {
+        if (string.IsNullOrWhiteSpace(className))
+            throw new ArgumentException("Class name cannot be empty.", nameof(className));
+
+        var result = this;
+        foreach (var token in className.Split(new[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+            result = new(PartKind.Class, token, null, result);
+
+        return result;
+    }
 
     /// <summary>Add a name attribute condition.</summary>
     public Locator Name(string name) => new(PartKind.Name, name, null, this);
@@ -241,8 +255,12 @@ public sealed class Locator
         return sb.ToString();
     }
 
+    /// <summary>
+    /// Escapes a value for use inside a CSS attribute string.
+    /// Returns the escaped content WITHOUT surrounding quotes; callers add the quotes.
+    /// </summary>
     private static string EscapeCssString(string value)
-        => $"\"{value.Replace("\\", "\\\\").Replace("\"", "\\\"")}\"";
+        => value.Replace("\\", "\\\\").Replace("\"", "\\\"");
 
     private static bool IsSafeCssIdentifier(string value)
     {
@@ -267,6 +285,31 @@ public sealed class Locator
             if (char.IsWhiteSpace(c)) return true;
         }
         return false;
+    }
+
+    #endregion
+
+    #region Anchor System
+
+    /// <summary>
+    /// Creates an anchor point for relative element searching.
+    /// The anchor system finds target elements relative to a reference (anchor) element,
+    /// useful for dynamic tables, forms, and lists where positions change.
+    /// 
+    /// Example:
+    /// <code>
+    /// var downloadBtn = Loc.Anchor(Loc.Text("2026-10-22"))
+    ///     .Find(Loc.Css("button.download"))
+    ///     .Resolve();
+    /// 
+    /// client.Click(downloadBtn);
+    /// </code>
+    /// </summary>
+    /// <param name="driver">The WebDriver instance to use for element searches.</param>
+    /// <returns>A new AnchorLocator configured with this locator as the anchor point.</returns>
+    public AnchorLocator Anchor(IWebDriver driver)
+    {
+        return new AnchorLocator(driver, this);
     }
 
     #endregion

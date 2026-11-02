@@ -1,17 +1,17 @@
 namespace Ravelaso.UiPath.Selenium.Core;
 
 /// <summary>
-/// Browser and client configuration options.
+/// WebBrowser and client configuration options.
 /// </summary>
 public class BrowserOptions
 {
     /// <summary>
-    /// Browser type to launch. Default: <see cref="BrowserType.Edge"/>.
+    /// WebBrowser type to launch. Default: <see cref="WebBrowser.Edge"/>.
     /// </summary>
-    public BrowserType Browser { get; set; } = BrowserType.Edge;
+    public WebBrowser WebBrowser { get; set; } = WebBrowser.Edge;
 
     /// <summary>
-    /// Run browser in headless mode (no UI). Default: false.
+    /// Run webBrowser in headless mode (no UI). Default: false.
     /// </summary>
     public bool Headless { get; set; }
 
@@ -53,12 +53,19 @@ public class BrowserOptions
     public TimeSpan ElementWaitTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
     /// <summary>
-    /// Path to the browser executable. If null, default location is used. Default: null.
+    /// Path to the webBrowser executable. If null, default location is used. Default: null.
     /// </summary>
     public string? BinaryPath { get; set; }
 
     /// <summary>
-    /// Extra command-line arguments for the browser (e.g., ["--no-sandbox", "--disable-blink-features=AutomationControlled"]).
+    /// Extra command-line arguments for the webBrowser (e.g., ["--no-sandbox", "--disable-blink-features=AutomationControlled"]).
     /// </summary>
     public List<string> ExtraArguments { get; } = new();
+
+    /// <summary>
+    /// Remote debugging address to attach to an existing browser instance
+    /// (e.g. "localhost:9222"). If set, no new browser is launched;
+    /// the driver connects to the already-running browser.
+    /// </summary>
+    public string? DebuggerAddress { get; set; }
 }

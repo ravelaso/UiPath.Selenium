@@ -129,6 +129,63 @@ public class LocatorTests
     }
 
     /// <summary>
+    /// Verify that Id combined with Name renders a valid single-quoted-value CSS selector.
+    /// Regression test: the value must not be wrapped in duplicated quotes.
+    /// </summary>
+    [Fact]
+    public void Locator_Chaining_IdAndName_ProducesValidCSS()
+    {
+        var locator = Loc.Id("txtLogin").And.Name("txtLogin");
+        var by = (By)locator;
+
+        Assert.Equal("css selector", by.Mechanism);
+        Assert.Equal("#txtLogin[name=\"txtLogin\"]", by.Criteria);
+        Assert.DoesNotContain("\"\"", by.Criteria);
+    }
+
+    /// <summary>
+    /// Verify that a custom attribute alone renders a valid CSS selector.
+    /// </summary>
+    [Fact]
+    public void Loc_Attr_Alone_ProducesValidCSS()
+    {
+        var locator = Loc.Attr("data-testid", "btn");
+        var by = (By)locator;
+
+        Assert.Equal("css selector", by.Mechanism);
+        Assert.Equal("[data-testid=\"btn\"]", by.Criteria);
+        Assert.DoesNotContain("\"\"", by.Criteria);
+    }
+
+    /// <summary>
+    /// Verify that Id combined with a custom attribute renders valid CSS.
+    /// </summary>
+    [Fact]
+    public void Locator_Chaining_IdAndAttr_ProducesValidCSS()
+    {
+        var locator = Loc.Id("field").And.Attr("data-role", "input");
+        var by = (By)locator;
+
+        Assert.Equal("css selector", by.Mechanism);
+        Assert.Equal("#field[data-role=\"input\"]", by.Criteria);
+        Assert.DoesNotContain("\"\"", by.Criteria);
+    }
+
+    /// <summary>
+    /// Verify that a value containing quotes is escaped correctly.
+    /// </summary>
+    [Fact]
+    public void Loc_Attr_ValueWithQuotes_EscapesCorrectly()
+    {
+        var locator = Loc.Attr("data-x", "a\"b");
+        var by = (By)locator;
+
+        Assert.Equal("css selector", by.Mechanism);
+        Assert.Equal("[data-x=\"a\\\"b\"]", by.Criteria);
+        Assert.DoesNotContain("\"\"", by.Criteria);
+    }
+
+    /// <summary>
     /// Verify that Loc.Text forces XPath mode.
     /// </summary>
     [Fact]

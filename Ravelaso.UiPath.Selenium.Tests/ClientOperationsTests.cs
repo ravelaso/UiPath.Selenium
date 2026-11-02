@@ -15,13 +15,13 @@ public class ClientOperationsTests : IDisposable
     {
         var options = new BrowserOptions
         {
-            Browser = BrowserType.Edge,
+            WebBrowser = WebBrowser.Edge,
             Headless = true,
             GlobalDelay = TimeSpan.FromMilliseconds(100),  // Short delay for tests
             ElementWaitTimeout = TimeSpan.FromSeconds(5)
         };
         
-        _client = new RavelasoWebClient(BrowserType.Edge, options);
+        _client = new RavelasoWebClient(WebBrowser.Edge, options);
     }
 
     private RavelasoWebClient Client
@@ -40,12 +40,12 @@ public class ClientOperationsTests : IDisposable
     [Fact]
     public void Client_Instantiation_Works()
     {
-        var options = new BrowserOptions { Browser = BrowserType.Edge, Headless = true };
-        var client = new RavelasoWebClient(BrowserType.Edge, options);
+        var options = new BrowserOptions { WebBrowser = WebBrowser.Edge, Headless = true };
+        var client = new RavelasoWebClient(WebBrowser.Edge, options);
         
         Assert.NotNull(client);
         Assert.NotNull(client.Driver);
-        Assert.Equal(BrowserType.Edge, client.Browser);
+        Assert.Equal(WebBrowser.Edge, client.WebBrowser);
         
         client.Dispose();
     }
