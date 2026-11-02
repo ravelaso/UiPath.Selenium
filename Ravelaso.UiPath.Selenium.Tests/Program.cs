@@ -79,7 +79,7 @@ class Program
             {
                 var instance = new T();
                 method.Invoke(instance, null);
-                
+
                 // If instance is IDisposable, dispose it
                 if (instance is IDisposable disposable)
                     disposable.Dispose();
