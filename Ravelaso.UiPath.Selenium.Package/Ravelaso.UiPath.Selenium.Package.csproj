@@ -22,6 +22,7 @@
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageOutputPath>$(SolutionDir)dist</PackageOutputPath>
         <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageIcon>images/UI_icon.png</PackageIcon>
         <IncludeSymbols>false</IncludeSymbols>
         <IncludeSource>false</IncludeSource>
         <DeterministicSourcePaths Condition="'$(Configuration)' == 'Release'">true</DeterministicSourcePaths>
@@ -68,6 +69,7 @@
 
     <!-- Include Documentation in Package -->
     <ItemGroup>
+        <None Include="..\UI_icon.png" Pack="true" PackagePath="images" />
         <None Include="..\README.md" Pack="true" PackagePath="\" />
         <None Include="..\docs\**\*.md" Pack="true" PackagePath="docs\" />
     </ItemGroup>
