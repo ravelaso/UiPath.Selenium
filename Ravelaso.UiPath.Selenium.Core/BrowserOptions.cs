@@ -68,4 +68,5 @@ public class BrowserOptions
     /// the driver connects to the already-running browser.
     /// </summary>
     public string? DebuggerAddress { get; set; }
+
 }
