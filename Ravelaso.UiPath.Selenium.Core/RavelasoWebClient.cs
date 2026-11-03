@@ -88,6 +88,14 @@ public class RavelasoWebClient : IDisposable
     }
 
     /// <summary>
+    /// Initializes a new client using the browser type defined in <paramref name="options"/>.
+    /// </summary>
+    public RavelasoWebClient(BrowserOptions? options)
+        : this(options?.WebBrowser ?? WebBrowser.Edge, options)
+    {
+    }
+
+    /// <summary>
     /// Called before each exposed operation to apply the global delay.
     /// Throws <see cref="ObjectDisposedException"/> if the client has been disposed.
     /// Can be overridden in derived classes to add custom logic.
