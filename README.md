@@ -30,10 +30,12 @@ Automate web browser interactions from UiPath or .NET:
 ## Installation
 
 ```bash
-dotnet add package Ravelaso.UiPath.Selenium
+dotnet build -c Release
 ```
 
-Or copy the `.nupkg` from the `dist/` folder to your NuGet feed.
+Copy the `.nupkg` from the `dist/` folder to your NuGet feed.
+
+Use the provided Package release in the Github Releases page until it gets published to NuGet.
 
 ---
 

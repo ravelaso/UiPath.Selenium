@@ -6,11 +6,11 @@
     <PropertyGroup>
         <!-- Build Counter (unique per build: HHMM format - hours and minutes) -->
         <BuildCounter>$([System.DateTime]::UtcNow.ToString("HHmm"))</BuildCounter>
-        
+
         <!-- Version Strategy: Fixed Release (1.1.0) + Auto-increment Debug (1.1.0-build0HHMM) -->
         <VersionPrefix Condition="'$(Configuration)' == 'Release'">$(VersionMajor).$(VersionMinor).$(VersionPatch)</VersionPrefix>
         <VersionPrefix Condition="'$(Configuration)' == 'Debug'">$(VersionMajor).$(VersionMinor).$(VersionPatch)-build$(BuildCounter)</VersionPrefix>
-        
+
         <!-- Build Configuration -->
         <OutputType>Library</OutputType>
         <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
@@ -33,7 +33,9 @@
 
     <!-- Reference Core Library -->
     <ItemGroup>
-        <ProjectReference Include="..\Ravelaso.UiPath.Selenium.Core\Ravelaso.UiPath.Selenium.Core.csproj" />
+        <ProjectReference Include="..\Ravelaso.UiPath.Selenium.Core\Ravelaso.UiPath.Selenium.Core.csproj">
+            <PrivateAssets>all</PrivateAssets>
+        </ProjectReference>
     </ItemGroup>
 
     <!-- Pack dependencies (transitive) + runtimes -->
@@ -42,7 +44,7 @@
             $(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage
         </TargetsForTfmSpecificBuildOutput>
     </PropertyGroup>
-    
+
     <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="ResolveReferences">
         <ItemGroup>
             <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths)" />

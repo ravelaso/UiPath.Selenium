@@ -20,7 +20,7 @@ public class ClientOperationsTests : IDisposable
             GlobalDelay = TimeSpan.FromMilliseconds(100),  // Short delay for tests
             ElementWaitTimeout = TimeSpan.FromSeconds(5)
         };
-        
+
         _client = new RavelasoWebClient(WebBrowser.Edge, options);
     }
 
@@ -30,7 +30,7 @@ public class ClientOperationsTests : IDisposable
         {
             if (_client == null)
                 SetupClient();
-            return _client;
+            return _client!;
         }
     }
 
@@ -42,11 +42,11 @@ public class ClientOperationsTests : IDisposable
     {
         var options = new BrowserOptions { WebBrowser = WebBrowser.Edge, Headless = true };
         var client = new RavelasoWebClient(WebBrowser.Edge, options);
-        
+
         Assert.NotNull(client);
         Assert.NotNull(client.Driver);
         Assert.Equal(WebBrowser.Edge, client.WebBrowser);
-        
+
         client.Dispose();
     }
 
@@ -58,7 +58,7 @@ public class ClientOperationsTests : IDisposable
     {
         var dataUrl = TestFixtures.GetTestPageDataURL();
         Client.Navigate(dataUrl);
-        
+
         var title = Client.GetTitle();
         Assert.Equal("Test Page", title);
     }
@@ -71,7 +71,7 @@ public class ClientOperationsTests : IDisposable
     {
         var dataUrl = TestFixtures.GetTestPageDataURL();
         Client.Navigate(dataUrl);
-        
+
         var title = Client.GetTitle();
         Assert.NotEmpty(title);
         Assert.Equal("Test Page", title);
@@ -85,7 +85,7 @@ public class ClientOperationsTests : IDisposable
     {
         var dataUrl = TestFixtures.GetTestPageDataURL();
         Client.Navigate(dataUrl);
-        
+
         var exists = Client.Exists(Loc.Id("username"));
         Assert.True(exists);
     }
@@ -98,7 +98,7 @@ public class ClientOperationsTests : IDisposable
     {
         var dataUrl = TestFixtures.GetTestPageDataURL();
         Client.Navigate(dataUrl);
-        
+
         var exists = Client.Exists(Loc.Id("nonexistent"));
         Assert.False(exists);
     }
@@ -111,7 +111,7 @@ public class ClientOperationsTests : IDisposable
     {
         var dataUrl = TestFixtures.GetTestPageDataURL();
         Client.Navigate(dataUrl);
-        
+
         var isDisplayed = Client.IsDisplayed(Loc.Id("username"));
         Assert.True(isDisplayed);
     }
@@ -124,10 +124,10 @@ public class ClientOperationsTests : IDisposable
     {
         var dataUrl = TestFixtures.GetTestPageDataURL();
         Client.Navigate(dataUrl);
-        
+
         Client.Type(Loc.Id("username"), "testuser");
         var value = Client.GetAttribute(Loc.Id("username"), "value");
-        
+
         Assert.Equal("testuser", value);
     }
 
@@ -139,7 +139,7 @@ public class ClientOperationsTests : IDisposable
     {
         var dataUrl = TestFixtures.GetTestPageDataURL();
         Client.Navigate(dataUrl);
-        
+
         var type = Client.GetAttribute(Loc.Id("username"), "type");
         Assert.Equal("text", type);
     }
@@ -152,10 +152,10 @@ public class ClientOperationsTests : IDisposable
     {
         var dataUrl = TestFixtures.GetTestPageDataURL();
         Client.Navigate(dataUrl);
-        
+
         var success = Client.Select(Loc.Id("country"), "mx");
         Assert.True(success);
-        
+
         // Verify the selection
         var selected = Client.GetAttribute(Loc.Id("country"), "value");
         Assert.Equal("mx", selected);
@@ -169,10 +169,10 @@ public class ClientOperationsTests : IDisposable
     {
         var dataUrl = TestFixtures.GetTestPageDataURL();
         Client.Navigate(dataUrl);
-        
+
         var success = Client.Select(Loc.Id("country"), "Canada");
         Assert.True(success);
-        
+
         var selected = Client.GetAttribute(Loc.Id("country"), "value");
         Assert.Equal("ca", selected);
     }
@@ -185,13 +185,13 @@ public class ClientOperationsTests : IDisposable
     {
         var dataUrl = TestFixtures.GetTestPageDataURL();
         Client.Navigate(dataUrl);
-        
+
         // Result div is hidden initially (display:none in CSS)
         var displayBefore = Client.ExecuteScript("return document.getElementById('result').style.display;") ?? "";
-        
+
         // Click button
         Client.Click(Loc.Id("submit"));
-        
+
         // Result div should now be visible
         var displayAfter = Client.ExecuteScript("return document.getElementById('result').style.display;");
         Assert.Equal("block", displayAfter?.ToString());
@@ -205,7 +205,7 @@ public class ClientOperationsTests : IDisposable
     {
         var dataUrl = TestFixtures.GetTestPageDataURL();
         Client.Navigate(dataUrl);
-        
+
         var found = Client.WaitFor(Loc.Id("username"), TimeSpan.FromSeconds(2));
         Assert.True(found);
     }
@@ -218,7 +218,7 @@ public class ClientOperationsTests : IDisposable
     {
         var dataUrl = TestFixtures.GetTestPageDataURL();
         Client.Navigate(dataUrl);
-        
+
         var found = Client.WaitFor(Loc.Id("nonexistent"), TimeSpan.FromMilliseconds(500));
         Assert.False(found);
     }
@@ -231,18 +231,18 @@ public class ClientOperationsTests : IDisposable
     {
         var dataUrl = TestFixtures.GetTestPageDataURL();
         Client.Navigate(dataUrl);
-        
+
         var tempDir = Path.Combine(Path.GetTempPath(), "ravelaso-test");
         var screenshotPath = Path.Combine(tempDir, "test_screenshot.png");
-        
+
         if (File.Exists(screenshotPath))
             File.Delete(screenshotPath);
-        
+
         var result = Client.Screenshot(screenshotPath);
-        
+
         Assert.True(File.Exists(result));
         Assert.True(new FileInfo(result).Length > 0);
-        
+
         // Cleanup
         if (File.Exists(result))
             File.Delete(result);
@@ -256,7 +256,7 @@ public class ClientOperationsTests : IDisposable
     {
         var dataUrl = TestFixtures.GetTestPageDataURL();
         Client.Navigate(dataUrl);
-        
+
         var result = Client.ExecuteScript("return 2 + 2;");
         Assert.Equal(4L, result);  // JavaScript numbers are long in .NET
     }
@@ -269,10 +269,10 @@ public class ClientOperationsTests : IDisposable
     {
         var dataUrl = TestFixtures.GetTestPageDataURL();
         Client.Navigate(dataUrl);
-        
+
         var locator = Loc.Id("username").And.Class("form-input");
         var exists = Client.Exists(locator);
-        
+
         Assert.True(exists);
     }
 
@@ -284,7 +284,7 @@ public class ClientOperationsTests : IDisposable
     {
         var dataUrl = TestFixtures.GetTestPageDataURL();
         Client.Navigate(dataUrl);
-        
+
         var currentUrl = Client.GetUrl();
         Assert.StartsWith("data:", currentUrl);
     }
