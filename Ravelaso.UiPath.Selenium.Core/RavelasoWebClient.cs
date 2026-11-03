@@ -3,6 +3,8 @@ using OpenQA.Selenium.Interactions;
 using OpenQA.Selenium.Support.UI;
 using System.Diagnostics;
 
+// ReSharper disable MethodOverloadWithOptionalParameter
+
 namespace Ravelaso.UiPath.Selenium.Core;
 
 /// <summary>
@@ -66,7 +68,9 @@ public class RavelasoWebClient : IDisposable
     /// Initializes a new client for the specified webBrowser with default options.
     /// </summary>
     /// <param name="webBrowser">The webBrowser type to launch.</param>
-    public RavelasoWebClient(WebBrowser webBrowser) : this(webBrowser, null) { }
+    public RavelasoWebClient(WebBrowser webBrowser) : this(webBrowser, null)
+    {
+    }
 
     /// <summary>
     /// Initializes a new client for the specified webBrowser with custom options.
@@ -75,7 +79,7 @@ public class RavelasoWebClient : IDisposable
     /// <param name="options">Configuration options. If null, defaults are used.</param>
     public RavelasoWebClient(WebBrowser webBrowser, BrowserOptions? options)
     {
-        options ??= new BrowserOptions();
+        options ??= new();
         options.WebBrowser = webBrowser;
 
         WebBrowser = webBrowser;
@@ -99,15 +103,6 @@ public class RavelasoWebClient : IDisposable
     }
 
     /// <summary>
-    /// Waits for an element to appear on the page and returns it when found.
-    /// Uses <see cref="WebDriverWait"/> with the specified or default timeout.
-    /// </summary>
-    /// <param name="locator">The element locator.</param>
-    /// <param name="timeout">Optional custom timeout. If null, uses <see cref="ElementWaitTimeout"/>.</param>
-    /// <returns>The found <see cref="IWebElement"/>.</returns>
-    /// <exception cref="WebDriverTimeoutException">If the element is not found within the timeout.</exception>
-    /// <exception cref="NoSuchElementException">If the locator produces no results.</exception>
-    /// <summary>
     /// Resolves a locator to an element, applying the configured timeout.
     /// Searches the light DOM first and, if not found, falls back to a recursive
     /// search through any open Shadow DOM roots so that Web Components (e.g.
@@ -118,7 +113,6 @@ public class RavelasoWebClient : IDisposable
         var wait = timeout ?? ElementWaitTimeout;
 
         if (wait <= TimeSpan.Zero)
-        {
             try
             {
                 return _driver.FindElement(locator);
@@ -131,7 +125,6 @@ public class RavelasoWebClient : IDisposable
 
                 throw;
             }
-        }
 
         var webDriverWait = new WebDriverWait(_driver, wait);
         return webDriverWait.Until(driver =>
@@ -174,8 +167,12 @@ public class RavelasoWebClient : IDisposable
         {
             return context.FindElement(locator);
         }
-        catch (NoSuchElementException) { }
-        catch (WebDriverException) { }
+        catch (NoSuchElementException)
+        {
+        }
+        catch (WebDriverException)
+        {
+        }
 
         foreach (var element in context.FindElements(By.CssSelector("*")))
         {
@@ -184,9 +181,15 @@ public class RavelasoWebClient : IDisposable
             {
                 shadowRoot = element.GetShadowRoot();
             }
-            catch (NoSuchShadowRootException) { }
-            catch (StaleElementReferenceException) { }
-            catch (WebDriverException) { }
+            catch (NoSuchShadowRootException)
+            {
+            }
+            catch (StaleElementReferenceException)
+            {
+            }
+            catch (WebDriverException)
+            {
+            }
 
             if (shadowRoot == null)
                 continue;
@@ -211,11 +214,20 @@ public class RavelasoWebClient : IDisposable
         {
             _driver.Quit();
         }
-        catch (WebDriverException) { /* Driver already closed */ }
+        catch (WebDriverException)
+        {
+            /* Driver already closed */
+        }
         finally
         {
-            try { _driver.Dispose(); }
-            catch { /* Dispose already handled */ }
+            try
+            {
+                _driver.Dispose();
+            }
+            catch
+            {
+                /* Dispose already handled */
+            }
         }
     }
 
@@ -241,7 +253,8 @@ public class RavelasoWebClient : IDisposable
         if (string.IsNullOrWhiteSpace(destinationPath))
             throw new ArgumentException("Destination path cannot be empty.", nameof(destinationPath));
 
-        var effectiveTimeout = timeout ?? (ElementWaitTimeout > TimeSpan.Zero ? ElementWaitTimeout : TimeSpan.FromSeconds(60));
+        var effectiveTimeout =
+            timeout ?? (ElementWaitTimeout > TimeSpan.Zero ? ElementWaitTimeout : TimeSpan.FromSeconds(60));
         var fullPath = Path.GetFullPath(destinationPath);
         var parent = Path.GetDirectoryName(fullPath);
         if (!string.IsNullOrWhiteSpace(parent))
@@ -252,7 +265,7 @@ public class RavelasoWebClient : IDisposable
 
         if (!string.IsNullOrWhiteSpace(url))
         {
-            DownloadHelper.DownloadHttp(_driver, url!, fullPath, effectiveTimeout);
+            DownloadHelper.DownloadHttp(_driver, url, fullPath, effectiveTimeout);
             return fullPath;
         }
 
@@ -271,7 +284,8 @@ public class RavelasoWebClient : IDisposable
         if (string.IsNullOrWhiteSpace(destinationPath))
             throw new ArgumentException("Destination path cannot be empty.", nameof(destinationPath));
 
-        var effectiveTimeout = timeout ?? (ElementWaitTimeout > TimeSpan.Zero ? ElementWaitTimeout : TimeSpan.FromSeconds(60));
+        var effectiveTimeout =
+            timeout ?? (ElementWaitTimeout > TimeSpan.Zero ? ElementWaitTimeout : TimeSpan.FromSeconds(60));
         var fullPath = Path.GetFullPath(destinationPath);
         var parent = Path.GetDirectoryName(fullPath);
         if (!string.IsNullOrWhiteSpace(parent))
@@ -324,7 +338,8 @@ public class RavelasoWebClient : IDisposable
             throw new ArgumentOutOfRangeException(nameof(percent), "Zoom must be greater than zero.");
 
         var zoom = Math.Clamp(percent, 0.25, 5.0);
-        var script = $"document.body.style.zoom = '{zoom * 100}%'; document.documentElement.style.zoom = '{zoom * 100}%';";
+        var script =
+            $"document.body.style.zoom = '{zoom * 100}%'; document.documentElement.style.zoom = '{zoom * 100}%';";
 
         ((IJavaScriptExecutor)_driver).ExecuteScript(script);
     }
@@ -394,11 +409,6 @@ public class RavelasoWebClient : IDisposable
     /// Clicks an element located by the given locator.
     /// </summary>
     /// <param name="locator">The element locator.</param>
-    /// <exception cref="WebDriverTimeoutException">If the element is not found within the timeout.</exception>
-    /// <summary>
-    /// Clicks an element located by the given locator.
-    /// </summary>
-    /// <param name="locator">The element locator.</param>
     /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
     /// <example>
     /// <code>
@@ -445,15 +455,10 @@ public class RavelasoWebClient : IDisposable
     /// Double-clicks an element (Locator overload).
     /// </summary>
     public void DoubleClick(Locator locator, TimeSpan? timeout = null)
-        => DoubleClick(locator.ToBy(), timeout);
+    {
+        DoubleClick(locator.ToBy(), timeout);
+    }
 
-    /// <summary>
-    /// Enters text into an element. Optionally clears the field first.
-    /// </summary>
-    /// <param name="locator">The element locator.</param>
-    /// <param name="text">The text to enter.</param>
-    /// <param name="clear">If true, clears the field before typing. Default: true.</param>
-    /// <exception cref="WebDriverTimeoutException">If the element is not found within the timeout.</exception>
     /// <summary>
     /// Enters text into an element. Optionally clears the field first.
     /// </summary>
@@ -476,20 +481,18 @@ public class RavelasoWebClient : IDisposable
         var element = WaitElement(locator, timeout);
 
         if (clear)
-        {
-            try { element.Clear(); }
-            catch (InvalidElementStateException) { /* Element not a text input; proceed */ }
-        }
+            try
+            {
+                element.Clear();
+            }
+            catch (InvalidElementStateException)
+            {
+                /* Element not a text input; proceed */
+            }
 
         element.SendKeys(text);
     }
 
-    /// <summary>
-    /// Gets the visible text of an element.
-    /// </summary>
-    /// <param name="locator">The element locator.</param>
-    /// <returns>The visible text content.</returns>
-    /// <exception cref="WebDriverTimeoutException">If the element is not found within the timeout.</exception>
     /// <summary>
     /// Gets the visible text of an element.
     /// </summary>
@@ -510,13 +513,6 @@ public class RavelasoWebClient : IDisposable
         return WaitElement(locator, timeout).Text;
     }
 
-    /// <summary>
-    /// Gets the value of a specific attribute on an element.
-    /// </summary>
-    /// <param name="locator">The element locator.</param>
-    /// <param name="attributeName">The attribute name (e.g., "value", "href", "data-id").</param>
-    /// <returns>The attribute value, or null if the attribute does not exist.</returns>
-    /// <exception cref="WebDriverTimeoutException">If the element is not found within the timeout.</exception>
     /// <summary>
     /// Gets the value of a specific attribute on an element.
     /// </summary>
@@ -555,14 +551,10 @@ public class RavelasoWebClient : IDisposable
     /// </code>
     /// </example>
     public bool Exists(By locator)
-        => Exists(locator, TimeSpan.Zero);
+    {
+        return Exists(locator, TimeSpan.Zero);
+    }
 
-    /// <summary>
-    /// Checks if an element exists on the page, waiting up to the specified timeout.
-    /// </summary>
-    /// <param name="locator">The element locator.</param>
-    /// <param name="timeout">The timeout to wait for the element.</param>
-    /// <returns>True if the element appears within the timeout; false otherwise.</returns>
     /// <summary>
     /// Checks if an element exists on the page, waiting up to the specified timeout.
     /// </summary>
@@ -577,15 +569,16 @@ public class RavelasoWebClient : IDisposable
             WaitElement(locator, timeout ?? TimeSpan.Zero);
             return true;
         }
-        catch (WebDriverTimeoutException) { return false; }
-        catch (NotFoundException) { return false; }
+        catch (WebDriverTimeoutException)
+        {
+            return false;
+        }
+        catch (NotFoundException)
+        {
+            return false;
+        }
     }
 
-    /// <summary>
-    /// Checks if an element is displayed on the page.
-    /// </summary>
-    /// <param name="locator">The element locator.</param>
-    /// <returns>True if the element exists and is displayed; false otherwise.</returns>
     /// <summary>
     /// Checks if an element is displayed on the page.
     /// </summary>
@@ -599,8 +592,14 @@ public class RavelasoWebClient : IDisposable
             var element = WaitElement(locator, timeout ?? TimeSpan.Zero);
             return element.Displayed;
         }
-        catch (NotFoundException) { return false; }
-        catch (WebDriverTimeoutException) { return false; }
+        catch (NotFoundException)
+        {
+            return false;
+        }
+        catch (WebDriverTimeoutException)
+        {
+            return false;
+        }
     }
 
     /// <summary>
@@ -609,14 +608,10 @@ public class RavelasoWebClient : IDisposable
     /// <param name="locator">The element locator.</param>
     /// <returns>True if the element appears within the timeout; false otherwise.</returns>
     public bool WaitFor(By locator)
-        => WaitFor(locator, ElementWaitTimeout);
+    {
+        return WaitFor(locator, ElementWaitTimeout);
+    }
 
-    /// <summary>
-    /// Waits for an element to appear on the page with a custom timeout.
-    /// </summary>
-    /// <param name="locator">The element locator.</param>
-    /// <param name="timeout">The timeout to wait for the element.</param>
-    /// <returns>True if the element appears within the timeout; false otherwise.</returns>
     /// <summary>
     /// Waits for an element to appear on the page with a custom timeout.
     /// </summary>
@@ -631,8 +626,14 @@ public class RavelasoWebClient : IDisposable
             WaitElement(locator, timeout);
             return true;
         }
-        catch (WebDriverTimeoutException) { return false; }
-        catch (NotFoundException) { return false; }
+        catch (WebDriverTimeoutException)
+        {
+            return false;
+        }
+        catch (NotFoundException)
+        {
+            return false;
+        }
     }
 
     /// <summary>
@@ -649,15 +650,25 @@ public class RavelasoWebClient : IDisposable
         if (anchor == null)
             throw new ArgumentNullException(nameof(anchor));
 
-        var effectiveTimeout = timeout ?? (ElementWaitTimeout > TimeSpan.Zero ? ElementWaitTimeout : TimeSpan.FromSeconds(60));
+        var effectiveTimeout =
+            timeout ?? (ElementWaitTimeout > TimeSpan.Zero ? ElementWaitTimeout : TimeSpan.FromSeconds(60));
         try
         {
             anchor.WithTimeout(effectiveTimeout).Resolve();
             return true;
         }
-        catch (NoSuchElementException) { return false; }
-        catch (WebDriverTimeoutException) { return false; }
-        catch (NotFoundException) { return false; }
+        catch (NoSuchElementException)
+        {
+            return false;
+        }
+        catch (WebDriverTimeoutException)
+        {
+            return false;
+        }
+        catch (NotFoundException)
+        {
+            return false;
+        }
     }
 
     /// <summary>
@@ -683,9 +694,18 @@ public class RavelasoWebClient : IDisposable
             anchor.WithTimeout(effectiveTimeout).Resolve();
             return true;
         }
-        catch (NoSuchElementException) { return false; }
-        catch (WebDriverTimeoutException) { return false; }
-        catch (NotFoundException) { return false; }
+        catch (NoSuchElementException)
+        {
+            return false;
+        }
+        catch (WebDriverTimeoutException)
+        {
+            return false;
+        }
+        catch (NotFoundException)
+        {
+            return false;
+        }
     }
 
     #endregion
@@ -729,9 +749,18 @@ public class RavelasoWebClient : IDisposable
                 var host = driver.FindElement(hostLocator);
                 return SearchShadowRoots(host.GetShadowRoot(), targetLocator);
             }
-            catch (NoSuchElementException) { return null; }
-            catch (NoSuchShadowRootException) { return null; }
-            catch (WebDriverException) { return null; }
+            catch (NoSuchElementException)
+            {
+                return null;
+            }
+            catch (NoSuchShadowRootException)
+            {
+                return null;
+            }
+            catch (WebDriverException)
+            {
+                return null;
+            }
         }) ?? throw new WebDriverTimeoutException($"Timed out waiting for element in shadow root of '{hostLocator}'.");
     }
 
@@ -739,7 +768,9 @@ public class RavelasoWebClient : IDisposable
     /// Finds an element inside the shadow root of a host element (Locator overload).
     /// </summary>
     public IWebElement FindInShadowRoot(Locator hostLocator, Locator targetLocator, TimeSpan? timeout = null)
-        => FindInShadowRoot(hostLocator.ToBy(), targetLocator.ToBy(), timeout);
+    {
+        return FindInShadowRoot(hostLocator.ToBy(), targetLocator.ToBy(), timeout);
+    }
 
     /// <summary>
     /// Checks whether an element exists inside the shadow root of a host element.
@@ -752,20 +783,28 @@ public class RavelasoWebClient : IDisposable
             FindInShadowRoot(hostLocator, targetLocator, timeout ?? TimeSpan.Zero);
             return true;
         }
-        catch (NotFoundException) { return false; }
-        catch (WebDriverTimeoutException) { return false; }
-        catch (WebDriverException) { return false; }
+        catch (NotFoundException)
+        {
+            return false;
+        }
+        catch (WebDriverTimeoutException)
+        {
+            return false;
+        }
+        catch (WebDriverException)
+        {
+            return false;
+        }
     }
 
     /// <summary>
     /// Checks whether an element exists inside the shadow root of a host element (Locator overload).
     /// </summary>
     public bool ExistsInShadowRoot(Locator hostLocator, Locator targetLocator, TimeSpan? timeout = null)
-        => ExistsInShadowRoot(hostLocator.ToBy(), targetLocator.ToBy(), timeout);
+    {
+        return ExistsInShadowRoot(hostLocator.ToBy(), targetLocator.ToBy(), timeout);
+    }
 
-    /// <summary>
-    /// Clicks an element located inside the shadow root of a host element.
-    /// </summary>
     /// <summary>
     /// Clicks an element located inside the shadow root of a host element.
     /// </summary>
@@ -791,7 +830,9 @@ public class RavelasoWebClient : IDisposable
     /// Clicks an element located inside the shadow root of a host element (Locator overload).
     /// </summary>
     public void ClickShadow(Locator hostLocator, Locator targetLocator, TimeSpan? timeout = null)
-        => ClickShadow(hostLocator.ToBy(), targetLocator.ToBy(), timeout);
+    {
+        ClickShadow(hostLocator.ToBy(), targetLocator.ToBy(), timeout);
+    }
 
     /// <summary>
     /// Clicks a previously resolved element, applying the global delay.
@@ -807,11 +848,6 @@ public class RavelasoWebClient : IDisposable
 
     #region Mouse / JavaScript
 
-    /// <summary>
-    /// Moves the mouse over an element. Useful for revealing hover-dependent
-    /// elements (e.g. a "clear" button that only appears on input hover).
-    /// </summary>
-    /// <param name="locator">The element locator.</param>
     /// <summary>
     /// Moves the mouse over an element. Useful for revealing hover-dependent
     /// elements (e.g. a "clear" button that only appears on input hover).
@@ -837,7 +873,11 @@ public class RavelasoWebClient : IDisposable
     /// Moves the mouse over an element (Locator overload).
     /// </summary>
     /// <param name="locator">The element locator.</param>
-    public void Hover(Locator locator, TimeSpan? timeout = null) => Hover(locator.ToBy(), timeout);
+    /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+    public void Hover(Locator locator, TimeSpan? timeout = null)
+    {
+        Hover(locator.ToBy(), timeout);
+    }
 
     /// <summary>
     /// Hovers over an element to reveal hover-dependent elements, then clicks
@@ -882,7 +922,9 @@ public class RavelasoWebClient : IDisposable
     /// Hovers and clicks (Locator overload).
     /// </summary>
     public void HoverAndClick(Locator buttonLocator, Locator? hoverTarget = null, TimeSpan? timeout = null)
-        => HoverAndClick(buttonLocator.ToBy(), hoverTarget?.ToBy(), timeout);
+    {
+        HoverAndClick(buttonLocator.ToBy(), hoverTarget?.ToBy()!, timeout);
+    }
 
     /// <summary>
     /// Hovers and clicks (IWebElement hover target overload).
@@ -895,11 +937,18 @@ public class RavelasoWebClient : IDisposable
         var sw = Stopwatch.StartNew();
 
         while (sw.Elapsed < wait)
-        {
             try
             {
                 // 1. Hover
-                try { new Actions(_driver).MoveToElement(hoverTarget).Perform(); } catch { }
+                try
+                {
+                    new Actions(_driver).MoveToElement(hoverTarget).Perform();
+                }
+                catch
+                {
+                    // Ignored
+                }
+
                 Thread.Sleep(300);
 
                 // 2. Forzar visibilidad
@@ -918,77 +967,96 @@ public class RavelasoWebClient : IDisposable
                 js.ExecuteScript("arguments[0].click();", element);
                 return;
             }
-            catch (StaleElementReferenceException) { Thread.Sleep(200); }
-            catch (WebDriverException) { Thread.Sleep(200); }
-        }
+            catch (StaleElementReferenceException)
+            {
+                Thread.Sleep(200);
+            }
+            catch (WebDriverException)
+            {
+                Thread.Sleep(200);
+            }
+
         throw new RavelasoException("HoverAndClick: button not clickable after retries.");
     }
 
-    /// <summary>
-    /// Auto-discovers a hover target that reveals the button by trying
-    /// several candidates and checking if the button becomes visible.
-    /// </summary>
-    private IWebElement? DiscoverHoverTargetByActions(By buttonLocator)
-    {
-        var btn = WaitElement(buttonLocator, TimeSpan.Zero);
-        var candidates = new List<IWebElement>();
-
-        try
-        {
-            var s = (IWebElement?)((IJavaScriptExecutor)_driver).ExecuteScript(
-                "return arguments[0].previousElementSibling;", btn);
-            if (s != null) candidates.Add(s);
-        }
-        catch { }
-
-        try
-        {
-            var btn2 = WaitElement(buttonLocator, TimeSpan.Zero);
-            var ancestor = (IWebElement?)((IJavaScriptExecutor)_driver).ExecuteScript(
-                "var e=arguments[0];" +
-                "while(e && e !== document.body) {" +
-                "  var s = getComputedStyle(e);" +
-                "  if (s.opacity === '0' || s.visibility === 'hidden' || s.display === 'none')" +
-                "    return e.parentElement;" +
-                "  e = e.parentElement;" +
-                "}" +
-                "return null;", btn2);
-            if (ancestor != null) candidates.Add(ancestor);
-        }
-        catch { }
-
-        try
-        {
-            var p = (IWebElement?)((IJavaScriptExecutor)_driver).ExecuteScript(
-                "return arguments[0].parentElement;", btn);
-            if (p != null) candidates.Add(p);
-        }
-        catch { }
-
-        try
-        {
-            var g = (IWebElement?)((IJavaScriptExecutor)_driver).ExecuteScript(
-                "return arguments[0].parentElement.parentElement;", btn);
-            if (g != null) candidates.Add(g);
-        }
-        catch { }
-
-        var unique = candidates.Distinct().ToList();
-
-        foreach (var candidate in unique)
-        {
-            try
-            {
-                new Actions(_driver).MoveToElement(candidate).Perform();
-                Thread.Sleep(300);
-                var b = WaitElement(buttonLocator, TimeSpan.Zero);
-                if (b.Displayed) return candidate;
-            }
-            catch { }
-        }
-
-        return unique.Count > 0 ? unique[0] : null;
-    }
+    // /// <summary>
+    // /// Auto-discovers a hover target that reveals the button by trying
+    // /// several candidates and checking if the button becomes visible.
+    // /// </summary>
+    // private IWebElement? DiscoverHoverTargetByActions(By buttonLocator)
+    // {
+    //     var btn = WaitElement(buttonLocator, TimeSpan.Zero);
+    //     var candidates = new List<IWebElement>();
+    //
+    //     try
+    //     {
+    //         var s = (IWebElement?)((IJavaScriptExecutor)_driver).ExecuteScript(
+    //             "return arguments[0].previousElementSibling;", btn);
+    //         if (s != null) candidates.Add(s);
+    //     }
+    //     catch
+    //     {
+    //         // ignored
+    //     }
+    //
+    //     try
+    //     {
+    //         var btn2 = WaitElement(buttonLocator, TimeSpan.Zero);
+    //         var ancestor = (IWebElement?)((IJavaScriptExecutor)_driver).ExecuteScript(
+    //             "var e=arguments[0];" +
+    //             "while(e && e !== document.body) {" +
+    //             "  var s = getComputedStyle(e);" +
+    //             "  if (s.opacity === '0' || s.visibility === 'hidden' || s.display === 'none')" +
+    //             "    return e.parentElement;" +
+    //             "  e = e.parentElement;" +
+    //             "}" +
+    //             "return null;", btn2);
+    //         if (ancestor != null) candidates.Add(ancestor);
+    //     }
+    //     catch
+    //     {
+    //         // ignored
+    //     }
+    //
+    //     try
+    //     {
+    //         var p = (IWebElement?)((IJavaScriptExecutor)_driver).ExecuteScript(
+    //             "return arguments[0].parentElement;", btn);
+    //         if (p != null) candidates.Add(p);
+    //     }
+    //     catch
+    //     {
+    //         // ignored
+    //     }
+    //
+    //     try
+    //     {
+    //         var g = (IWebElement?)((IJavaScriptExecutor)_driver).ExecuteScript(
+    //             "return arguments[0].parentElement.parentElement;", btn);
+    //         if (g != null) candidates.Add(g);
+    //     }
+    //     catch
+    //     {
+    //         // ignored
+    //     }
+    //
+    //     var unique = candidates.Distinct().ToList();
+    //
+    //     foreach (var candidate in unique)
+    //         try
+    //         {
+    //             new Actions(_driver).MoveToElement(candidate).Perform();
+    //             Thread.Sleep(300);
+    //             var b = WaitElement(buttonLocator, TimeSpan.Zero);
+    //             if (b.Displayed) return candidate;
+    //         }
+    //         catch
+    //         {
+    //             // ignored
+    //         }
+    //
+    //     return unique.Count > 0 ? unique[0] : null;
+    // }
 
     /// <summary>
     /// Clicks an element using JavaScript, bypassing hit-testing and any
@@ -1013,7 +1081,6 @@ public class RavelasoWebClient : IDisposable
         var wait = timeout ?? ElementWaitTimeout;
         var sw = Stopwatch.StartNew();
         while (sw.Elapsed < wait)
-        {
             try
             {
                 var element = WaitElement(locator, TimeSpan.Zero);
@@ -1024,30 +1091,12 @@ public class RavelasoWebClient : IDisposable
             {
                 Thread.Sleep(200);
             }
-        }
+
         var el = WaitElement(locator, timeout);
         ((IJavaScriptExecutor)_driver).ExecuteScript("arguments[0].click();", el);
     }
 
-    /// <summary>
-    /// Clicks a hover-revealed element entirely via JavaScript:
-    /// dispatches mouseenter/mouseover on the container, forces the button's
-    /// visibility, and clicks it. Avoids Selenium element references (no stale).
-    /// Use for Angular/React components where the button is hidden until hover.
-    /// </summary>
-    /// <param name="hoverContainerCss">CSS selector of the element to hover (e.g. "div[data-t-id='date-rangepicker-inputs']").</param>
-    /// <param name="buttonCss">CSS selector of the button to click (e.g. "button[data-t-id='clear-datepicker'][aria-label='Clear']").</param>
-    /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
-    /// <summary>
-    /// Clicks a hover-revealed element entirely via JavaScript:
-    /// dispatches mouseenter/mouseover on the container, forces the button's
-    /// visibility, and clicks it. Avoids Selenium element references (no stale).
-    /// Use for Angular/React components where the button is hidden until hover.
-    /// Accepts CSS string selectors.
-    /// </summary>
-    /// <param name="hoverContainerCss">CSS selector of the element to hover.</param>
-    /// <param name="buttonCss">CSS selector of the button to click.</param>
-    /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+/*
     /// <summary>
     /// Clicks a hidden element entirely via JavaScript in a single script:
     /// finds the button, forces its visibility (opacity, display, pointer-events),
@@ -1087,20 +1136,19 @@ public class RavelasoWebClient : IDisposable
                     buttonCss);
                 if (clicked is true) return;
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
+
             Thread.Sleep(200);
         }
+
         throw new WebDriverTimeoutException($"ClickHiddenJs: element not found: {buttonCss}");
     }
+*/
 
-    /// <summary>
-    /// Clicks a hover-revealed element entirely via JavaScript.
-    /// Accepts <see cref="Locator"/> objects (the standard of the library).
-    /// Handles CSS, XPath, Id, Class, Tag, Name and Attribute locators.
-    /// </summary>
-    /// <param name="hoverContainer">Locator of the element to hover.</param>
-    /// <param name="button">Locator of the button to click.</param>
-    /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+/*
     /// <summary>
     /// Clicks a hidden element entirely via JavaScript.
     /// Accepts <see cref="Locator"/> objects (the standard of the library).
@@ -1118,6 +1166,9 @@ public class RavelasoWebClient : IDisposable
 
         ClickHiddenJs(bCrit, timeout);
     }
+*/
+
+/*
     /// <summary>
     /// Converts a Selenium <see cref="By"/> to a (mechanism, criteria) pair usable
     /// by the JS findElement function. Handles link text / partial link text by
@@ -1133,7 +1184,9 @@ public class RavelasoWebClient : IDisposable
             return ("xpath", $"//a[contains(.,{XPathLiteral(crit)})]");
         return (mech, crit);
     }
+*/
 
+/*
     /// <summary>
     /// Wraps a string in single or double quotes for use as an XPath string literal.
     /// </summary>
@@ -1144,12 +1197,17 @@ public class RavelasoWebClient : IDisposable
         // Fallback: concat() for strings containing both quote types
         return "concat(" + string.Join(",", s.Split('\'').Select(p => $"'{p}'")) + ")";
     }
+*/
 
     /// <summary>
     /// Clicks an element using JavaScript (Locator overload).
     /// </summary>
     /// <param name="locator">The element locator.</param>
-    public void ClickJs(Locator locator, TimeSpan? timeout = null) => ClickJs(locator.ToBy(), timeout);
+    /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+    public void ClickJs(Locator locator, TimeSpan? timeout = null)
+    {
+        ClickJs(locator.ToBy(), timeout);
+    }
 
     /// <summary>
     /// Clicks a hidden/intercepted element by trying multiple strategies in sequence.
@@ -1167,18 +1225,19 @@ public class RavelasoWebClient : IDisposable
         var js = (IJavaScriptExecutor)_driver;
 
         // Helper: hover if target is available
-        Action tryHover = () =>
+        var tryHover = () =>
         {
             if (hoverTarget != null)
-            {
                 try
                 {
                     var ht = WaitElement(hoverTarget, TimeSpan.Zero);
                     new Actions(_driver).MoveToElement(ht).Perform();
                     Thread.Sleep(300);
                 }
-                catch { }
-            }
+                catch
+                {
+                    // ignored
+                }
         };
 
         // Estrategia 1: Hover + Force + .click() (la que funciona)
@@ -1195,10 +1254,23 @@ public class RavelasoWebClient : IDisposable
             js.ExecuteScript("arguments[0].click();", btn);
             Thread.Sleep(500);
             // Early return: si el botón fue removido, éxito
-            try { WaitElement(locator, TimeSpan.Zero); } catch (NoSuchElementException) { return; }
+            try
+            {
+                WaitElement(locator, TimeSpan.Zero);
+            }
+            catch (NoSuchElementException)
+            {
+                return;
+            }
         }
-        catch (NoSuchElementException) { return; /* ya removido por estrategia anterior */ }
-        catch (Exception ex) { throw new RavelasoException("ClickHidden Strategy 1 failed.", ex); }
+        catch (NoSuchElementException)
+        {
+            return; /* ya removido por estrategia anterior */
+        }
+        catch (Exception ex)
+        {
+            throw new RavelasoException("ClickHidden Strategy 1 failed.", ex);
+        }
 
         // Estrategia 2: dispatchEvent MouseEvent completo
         try
@@ -1209,22 +1281,49 @@ public class RavelasoWebClient : IDisposable
                 "e.style.opacity='1'; e.style.visibility='visible';" +
                 "e.style.display='inline-block'; e.style.pointerEvents='auto';" +
                 "e.classList.remove('ng-hide');" +
-                "['mousedown','mouseup','click'].forEach(function(t){e.dispatchEvent(new MouseEvent(t,{bubbles:true,cancelable:true,view:window}));});", btn);
+                "['mousedown','mouseup','click'].forEach(function(t){e.dispatchEvent(new MouseEvent(t,{bubbles:true,cancelable:true,view:window}));});",
+                btn);
             Thread.Sleep(500);
-            try { WaitElement(locator, TimeSpan.Zero); } catch (NoSuchElementException) { return; }
+            try
+            {
+                WaitElement(locator, TimeSpan.Zero);
+            }
+            catch (NoSuchElementException)
+            {
+                return;
+            }
         }
-        catch (NoSuchElementException) { return; }
-        catch (Exception ex) { throw new RavelasoException("ClickHidden Strategy 2 failed.", ex); }
+        catch (NoSuchElementException)
+        {
+            return;
+        }
+        catch (Exception ex)
+        {
+            throw new RavelasoException("ClickHidden Strategy 2 failed.", ex);
+        }
 
         // Estrategia 3: ClickJs (find + .click())
         try
         {
             ClickJs(locator, TimeSpan.FromSeconds(5));
             Thread.Sleep(500);
-            try { WaitElement(locator, TimeSpan.Zero); } catch (NoSuchElementException) { return; }
+            try
+            {
+                WaitElement(locator, TimeSpan.Zero);
+            }
+            catch (NoSuchElementException)
+            {
+                return;
+            }
         }
-        catch (NoSuchElementException) { return; }
-        catch (Exception ex) { throw new RavelasoException("ClickHidden Strategy 3 failed.", ex); }
+        catch (NoSuchElementException)
+        {
+            return;
+        }
+        catch (Exception ex)
+        {
+            throw new RavelasoException("ClickHidden Strategy 3 failed.", ex);
+        }
 
         // Estrategia 4: force+click via JS single script
         try
@@ -1237,23 +1336,47 @@ public class RavelasoWebClient : IDisposable
                 "e.classList.remove('ng-hide');" +
                 "e.click();", btnEl);
             Thread.Sleep(500);
-            try { WaitElement(locator, TimeSpan.Zero); } catch (NoSuchElementException) { return; }
+            try
+            {
+                WaitElement(locator, TimeSpan.Zero);
+            }
+            catch (NoSuchElementException)
+            {
+                return;
+            }
         }
-        catch (NoSuchElementException) { return; }
-        catch (Exception ex) { throw new RavelasoException("ClickHidden Strategy 4 failed.", ex); }
+        catch (NoSuchElementException)
+        {
+            return;
+        }
+        catch (Exception ex)
+        {
+            throw new RavelasoException("ClickHidden Strategy 4 failed.", ex);
+        }
 
         // Estrategia 5: HoverAndClick (solo si hay hoverTarget)
         if (hoverTarget != null)
-        {
             try
             {
                 HoverAndClick(locator, hoverTarget, TimeSpan.FromSeconds(5));
                 Thread.Sleep(500);
-                try { WaitElement(locator, TimeSpan.Zero); } catch (NoSuchElementException) { return; }
+                try
+                {
+                    WaitElement(locator, TimeSpan.Zero);
+                }
+                catch (NoSuchElementException)
+                {
+                    return;
+                }
             }
-            catch (NoSuchElementException) { return; }
-            catch (Exception ex) { throw new RavelasoException("ClickHidden Strategy 5 failed.", ex); }
-        }
+            catch (NoSuchElementException)
+            {
+                return;
+            }
+            catch (Exception ex)
+            {
+                throw new RavelasoException("ClickHidden Strategy 5 failed.", ex);
+            }
 
         // Si llegamos aquí, ninguna estrategia funcionó
         throw new RavelasoException(
@@ -1265,7 +1388,9 @@ public class RavelasoWebClient : IDisposable
     /// Clicks a hidden/intercepted element (Locator overload).
     /// </summary>
     public void ClickHidden(Locator locator, Locator? hoverTarget = null, TimeSpan? timeout = null)
-        => ClickHidden(locator.ToBy(), hoverTarget?.ToBy(), timeout);
+    {
+        ClickHidden(locator.ToBy(), hoverTarget?.ToBy(), timeout);
+    }
 
     /// <summary>
     /// Clicks a hidden/intercepted element (IWebElement hover target overload).
@@ -1273,10 +1398,15 @@ public class RavelasoWebClient : IDisposable
     public void ClickHidden(By locator, IWebElement hoverTarget, TimeSpan? timeout = null)
     {
         BeforeStep();
-        try { new Actions(_driver).MoveToElement(hoverTarget).Perform(); } catch (Exception ex)
+        try
+        {
+            new Actions(_driver).MoveToElement(hoverTarget).Perform();
+        }
+        catch (Exception ex)
         {
             throw new RavelasoException("ClickHidden: failed to hover the target element.", ex);
         }
+
         Thread.Sleep(150);
 
         var element = WaitElement(locator, timeout);
@@ -1293,141 +1423,158 @@ public class RavelasoWebClient : IDisposable
     }
 
     #endregion
+
     #region Diagnostics
 
-    /// <summary>
-    /// Runs multiple click strategies on a hidden/hover-revealed button and reports
-    /// which one successfully cleared the associated input. Useful for diagnosing
-    /// hover-revealed Angular/React components.
-    /// </summary>
-    /// <param name="clearBtnLocator">Locator for the clear button.</param>
-    /// <param name="inputLocator">Locator for the input whose value should be cleared.</param>
-    /// <param name="hoverTargetLocator">Optional locator of the element to hover to reveal the button.</param>
-    /// <returns>A multi-line diagnostic report.</returns>
-    private string DiagnoseClearButton(By clearBtnLocator, By inputLocator, By? hoverTargetLocator = null)
-    {
-        BeforeStep();
-        var js = (IJavaScriptExecutor)_driver;
-        var sb = new System.Text.StringBuilder();
-        var input = WaitElement(inputLocator, TimeSpan.Zero);
-        var initialValue = input.GetAttribute("value");
-        sb.AppendLine($"Initial input value: '{initialValue}'");
-        sb.AppendLine($"Button displayed (before): {WaitElement(clearBtnLocator, TimeSpan.Zero).Displayed}");
-
-        // Estrategia 1: Hover (Actions) + force + .click()
-        try
-        {
-            if (hoverTargetLocator != null)
-            {
-                var ht = WaitElement(hoverTargetLocator, TimeSpan.Zero);
-                new Actions(_driver).MoveToElement(ht).Perform();
-                Thread.Sleep(300);
-            }
-            var btn1 = WaitElement(clearBtnLocator, TimeSpan.Zero);
-            js.ExecuteScript(
-                "var e=arguments[0]; e.style.opacity='1'; e.style.visibility='visible';" +
-                "e.style.display='inline-block'; e.style.pointerEvents='auto';" +
-                "e.classList.remove('ng-hide');", btn1);
-            Thread.Sleep(50);
-            btn1 = WaitElement(clearBtnLocator, TimeSpan.Zero);
-            js.ExecuteScript("arguments[0].click();", btn1);
-            Thread.Sleep(500);
-            var val1 = WaitElement(inputLocator, TimeSpan.Zero).GetAttribute("value");
-            sb.AppendLine($"Strategy 1 (Hover+Force+.click): input='{val1}' {(val1 != initialValue ? "CLEARED" : "not cleared")}");
-        }
-        catch (Exception ex) { sb.AppendLine($"Strategy 1: ERROR {ex.GetType().Name}: {ex.Message}"); }
-
-        // Estrategia 2: dispatchEvent MouseEvent completo
-        try
-        {
-            var btn2 = WaitElement(clearBtnLocator, TimeSpan.Zero);
-            js.ExecuteScript(
-                "var e=arguments[0];" +
-                "e.style.opacity='1'; e.style.visibility='visible';" +
-                "e.style.display='inline-block'; e.style.pointerEvents='auto';" +
-                "e.classList.remove('ng-hide');" +
-                "['mousedown','mouseup','click'].forEach(function(t){e.dispatchEvent(new MouseEvent(t,{bubbles:true,cancelable:true,view:window}));});", btn2);
-            Thread.Sleep(500);
-            var val2 = WaitElement(inputLocator, TimeSpan.Zero).GetAttribute("value");
-            sb.AppendLine($"Strategy 2 (dispatchEvent): input='{val2}' {(val2 != initialValue ? "CLEARED" : "not cleared")}");
-        }
-        catch (Exception ex) { sb.AppendLine($"Strategy 2: ERROR {ex.GetType().Name}: {ex.Message}"); }
-
-        // Estrategia 3: ClickJs
-        try
-        {
-            ClickJs(clearBtnLocator, TimeSpan.FromSeconds(5));
-            Thread.Sleep(500);
-            var val3 = WaitElement(inputLocator, TimeSpan.Zero).GetAttribute("value");
-            sb.AppendLine($"Strategy 3 (ClickJs): input='{val3}' {(val3 != initialValue ? "CLEARED" : "not cleared")}");
-        }
-        catch (Exception ex) { sb.AppendLine($"Strategy 3: ERROR {ex.GetType().Name}: {ex.Message}"); }
-
-        // Estrategia 4: ClickHiddenJs
-        try
-        {
-            ClickHiddenJs("button[data-t-id='clear-datepicker'][aria-label='Clear']", TimeSpan.FromSeconds(5));
-            Thread.Sleep(500);
-            var val4 = WaitElement(inputLocator, TimeSpan.Zero).GetAttribute("value");
-            sb.AppendLine($"Strategy 4 (ClickHiddenJs): input='{val4}' {(val4 != initialValue ? "CLEARED" : "not cleared")}");
-        }
-        catch (Exception ex) { sb.AppendLine($"Strategy 4: ERROR {ex.GetType().Name}: {ex.Message}"); }
-
-        // Estrategia 5: HoverAndClick
-        try
-        {
-            HoverAndClick(clearBtnLocator, hoverTargetLocator ?? Loc.Tag("div").Attr("data-t-id", "date-rangepicker-inputs"), TimeSpan.FromSeconds(5));
-            Thread.Sleep(500);
-            var val5 = WaitElement(inputLocator, TimeSpan.Zero).GetAttribute("value");
-            sb.AppendLine($"Strategy 5 (HoverAndClick): input='{val5}' {(val5 != initialValue ? "CLEARED" : "not cleared")}");
-        }
-        catch (Exception ex) { sb.AppendLine($"Strategy 5: ERROR {ex.GetType().Name}: {ex.Message}"); }
-
-        // Diagnóstico de visibilidad
-        // Diagnóstico de visibilidad (el botón puede haber sido removido del DOM tras el click)
-        try
-        {
-            var btnDiag = WaitElement(clearBtnLocator, TimeSpan.Zero);
-            sb.AppendLine($"Button opacity: {js.ExecuteScript("return getComputedStyle(arguments[0]).opacity;", btnDiag)}");
-            sb.AppendLine($"Button displayed: {btnDiag.Displayed}");
-            sb.AppendLine($"Button enabled: {btnDiag.Enabled}");
-        }
-        catch (Exception ex)
-        {
-            sb.AppendLine($"Button no longer in DOM (likely cleared successfully): {ex.GetType().Name}");
-        }
-
-        if (hoverTargetLocator != null)
-        {
-            try
-            {
-                var ht = WaitElement(hoverTargetLocator, TimeSpan.Zero);
-                new Actions(_driver).MoveToElement(ht).Perform();
-                Thread.Sleep(500);
-                var btnDiag2 = WaitElement(clearBtnLocator, TimeSpan.Zero);
-                sb.AppendLine($"After hover - opacity: {js.ExecuteScript("return getComputedStyle(arguments[0]).opacity;", btnDiag2)}");
-                sb.AppendLine($"After hover - displayed: {btnDiag2.Displayed}");
-            }
-            catch (Exception ex)
-            {
-                sb.AppendLine($"After hover: {ex.GetType().Name}: {ex.Message}");
-            }
-        }
-
-        return sb.ToString();
-    }
+    // /// <summary>
+    // /// Runs multiple click strategies on a hidden/hover-revealed button and reports
+    // /// which one successfully cleared the associated input. Useful for diagnosing
+    // /// hover-revealed Angular/React components.
+    // /// </summary>
+    // /// <param name="clearBtnLocator">Locator for the clear button.</param>
+    // /// <param name="inputLocator">Locator for the input whose value should be cleared.</param>
+    // /// <param name="hoverTargetLocator">Optional locator of the element to hover to reveal the button.</param>
+    // /// <returns>A multi-line diagnostic report.</returns>
+    // private string DiagnoseClearButton(By clearBtnLocator, By inputLocator, By? hoverTargetLocator = null)
+    // {
+    //     BeforeStep();
+    //     var js = (IJavaScriptExecutor)_driver;
+    //     var sb = new System.Text.StringBuilder();
+    //     var input = WaitElement(inputLocator, TimeSpan.Zero);
+    //     var initialValue = input.GetAttribute("value");
+    //     sb.AppendLine($"Initial input value: '{initialValue}'");
+    //     sb.AppendLine($"Button displayed (before): {WaitElement(clearBtnLocator, TimeSpan.Zero).Displayed}");
+    //
+    //     // Estrategia 1: Hover (Actions) + force + .click()
+    //     try
+    //     {
+    //         if (hoverTargetLocator != null)
+    //         {
+    //             var ht = WaitElement(hoverTargetLocator, TimeSpan.Zero);
+    //             new Actions(_driver).MoveToElement(ht).Perform();
+    //             Thread.Sleep(300);
+    //         }
+    //
+    //         var btn1 = WaitElement(clearBtnLocator, TimeSpan.Zero);
+    //         js.ExecuteScript(
+    //             "var e=arguments[0]; e.style.opacity='1'; e.style.visibility='visible';" +
+    //             "e.style.display='inline-block'; e.style.pointerEvents='auto';" +
+    //             "e.classList.remove('ng-hide');", btn1);
+    //         Thread.Sleep(50);
+    //         btn1 = WaitElement(clearBtnLocator, TimeSpan.Zero);
+    //         js.ExecuteScript("arguments[0].click();", btn1);
+    //         Thread.Sleep(500);
+    //         var val1 = WaitElement(inputLocator, TimeSpan.Zero).GetAttribute("value");
+    //         sb.AppendLine(
+    //             $"Strategy 1 (Hover+Force+.click): input='{val1}' {(val1 != initialValue ? "CLEARED" : "not cleared")}");
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         sb.AppendLine($"Strategy 1: ERROR {ex.GetType().Name}: {ex.Message}");
+    //     }
+    //
+    //     // Estrategia 2: dispatchEvent MouseEvent completo
+    //     try
+    //     {
+    //         var btn2 = WaitElement(clearBtnLocator, TimeSpan.Zero);
+    //         js.ExecuteScript(
+    //             "var e=arguments[0];" +
+    //             "e.style.opacity='1'; e.style.visibility='visible';" +
+    //             "e.style.display='inline-block'; e.style.pointerEvents='auto';" +
+    //             "e.classList.remove('ng-hide');" +
+    //             "['mousedown','mouseup','click'].forEach(function(t){e.dispatchEvent(new MouseEvent(t,{bubbles:true,cancelable:true,view:window}));});",
+    //             btn2);
+    //         Thread.Sleep(500);
+    //         var val2 = WaitElement(inputLocator, TimeSpan.Zero).GetAttribute("value");
+    //         sb.AppendLine(
+    //             $"Strategy 2 (dispatchEvent): input='{val2}' {(val2 != initialValue ? "CLEARED" : "not cleared")}");
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         sb.AppendLine($"Strategy 2: ERROR {ex.GetType().Name}: {ex.Message}");
+    //     }
+    //
+    //     // Estrategia 3: ClickJs
+    //     try
+    //     {
+    //         ClickJs(clearBtnLocator, TimeSpan.FromSeconds(5));
+    //         Thread.Sleep(500);
+    //         var val3 = WaitElement(inputLocator, TimeSpan.Zero).GetAttribute("value");
+    //         sb.AppendLine($"Strategy 3 (ClickJs): input='{val3}' {(val3 != initialValue ? "CLEARED" : "not cleared")}");
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         sb.AppendLine($"Strategy 3: ERROR {ex.GetType().Name}: {ex.Message}");
+    //     }
+    //
+    //     // Estrategia 4: ClickHiddenJs
+    //     try
+    //     {
+    //         ClickHiddenJs("button[data-t-id='clear-datepicker'][aria-label='Clear']", TimeSpan.FromSeconds(5));
+    //         Thread.Sleep(500);
+    //         var val4 = WaitElement(inputLocator, TimeSpan.Zero).GetAttribute("value");
+    //         sb.AppendLine(
+    //             $"Strategy 4 (ClickHiddenJs): input='{val4}' {(val4 != initialValue ? "CLEARED" : "not cleared")}");
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         sb.AppendLine($"Strategy 4: ERROR {ex.GetType().Name}: {ex.Message}");
+    //     }
+    //
+    //     // Estrategia 5: HoverAndClick
+    //     try
+    //     {
+    //         HoverAndClick(clearBtnLocator,
+    //             hoverTargetLocator ?? Loc.Tag("div").Attr("data-t-id", "date-rangepicker-inputs"),
+    //             TimeSpan.FromSeconds(5));
+    //         Thread.Sleep(500);
+    //         var val5 = WaitElement(inputLocator, TimeSpan.Zero).GetAttribute("value");
+    //         sb.AppendLine(
+    //             $"Strategy 5 (HoverAndClick): input='{val5}' {(val5 != initialValue ? "CLEARED" : "not cleared")}");
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         sb.AppendLine($"Strategy 5: ERROR {ex.GetType().Name}: {ex.Message}");
+    //     }
+    //
+    //     // Diagnóstico de visibilidad
+    //     // Diagnóstico de visibilidad (el botón puede haber sido removido del DOM tras el click)
+    //     try
+    //     {
+    //         var btnDiag = WaitElement(clearBtnLocator, TimeSpan.Zero);
+    //         sb.AppendLine(
+    //             $"Button opacity: {js.ExecuteScript("return getComputedStyle(arguments[0]).opacity;", btnDiag)}");
+    //         sb.AppendLine($"Button displayed: {btnDiag.Displayed}");
+    //         sb.AppendLine($"Button enabled: {btnDiag.Enabled}");
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         sb.AppendLine($"Button no longer in DOM (likely cleared successfully): {ex.GetType().Name}");
+    //     }
+    //
+    //     if (hoverTargetLocator != null)
+    //         try
+    //         {
+    //             var ht = WaitElement(hoverTargetLocator, TimeSpan.Zero);
+    //             new Actions(_driver).MoveToElement(ht).Perform();
+    //             Thread.Sleep(500);
+    //             var btnDiag2 = WaitElement(clearBtnLocator, TimeSpan.Zero);
+    //             sb.AppendLine(
+    //                 $"After hover - opacity: {js.ExecuteScript("return getComputedStyle(arguments[0]).opacity;", btnDiag2)}");
+    //             sb.AppendLine($"After hover - displayed: {btnDiag2.Displayed}");
+    //         }
+    //         catch (Exception ex)
+    //         {
+    //             sb.AppendLine($"After hover: {ex.GetType().Name}: {ex.Message}");
+    //         }
+    //
+    //     return sb.ToString();
+    // }
 
     #endregion
 
     #region Dropdowns
 
-    /// <summary>
-    /// Selects an option from a native &lt;select&gt; element by value or visible text.
-    /// Attempts to match by value attribute first; if not found, matches by visible text (case-insensitive).
-    /// </summary>
-    /// <param name="locator">The &lt;select&gt; element locator.</param>
-    /// <param name="value">The value or visible text to select.</param>
-    /// <returns>True if the option was found and selected; false otherwise.</returns>
     /// <summary>
     /// Selects an option from a native &lt;select&gt; element by value or visible text.
     /// </summary>
@@ -1441,12 +1588,6 @@ public class RavelasoWebClient : IDisposable
         return SelectNative(element, value);
     }
 
-    /// <summary>
-    /// Selects an option from a native &lt;select&gt; element by index.
-    /// </summary>
-    /// <param name="locator">The &lt;select&gt; element locator.</param>
-    /// <param name="index">The 0-based index of the option to select.</param>
-    /// <returns>True if the index is valid and the option was selected; false otherwise.</returns>
     /// <summary>
     /// Selects an option from a native &lt;select&gt; element by index.
     /// </summary>
@@ -1478,7 +1619,7 @@ public class RavelasoWebClient : IDisposable
         // Try to match by visible text (case-insensitive or exact)
         foreach (var option in options)
         {
-            var text = (option.Text).Trim();
+            var text = option.Text.Trim();
             if (string.Equals(text, value, StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(text, value, StringComparison.Ordinal))
             {
@@ -1571,7 +1712,7 @@ public class RavelasoWebClient : IDisposable
     /// </example>
     public AnchorLocator CreateAnchor(Locator anchorPoint)
     {
-        return new AnchorLocator(_driver, anchorPoint);
+        return new(_driver, anchorPoint);
     }
 
     #endregion
