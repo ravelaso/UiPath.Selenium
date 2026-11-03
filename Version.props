@@ -10,7 +10,7 @@
     <PackageId>Ravelaso.UiPath.Selenium</PackageId>
     <Title>Ravelaso.UiPath.Selenium</Title>
     <Authors>Ravelaso</Authors>
-    <Description>Selenium WebDriver wrapper for .NET with fluent locators, global delay pattern, and UiPath Studio 25.10 compatibility</Description>
+    <Description>Selenium WebDriver wrapper for .NET with fluent locators, anchor system, global delay pattern, and UiPath Studio 25.10 compatibility</Description>
     <PackageProjectUrl>https://github.com/ravelaso/UiPath.Selenium</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/ravelaso/UiPath.Selenium</RepositoryUrl>
