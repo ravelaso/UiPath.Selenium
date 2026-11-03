@@ -3,7 +3,7 @@
     <!-- Semantic Versioning -->
     <VersionMajor>0</VersionMajor>
     <VersionMinor>1</VersionMinor>
-    <VersionPatch>0</VersionPatch>
+    <VersionPatch>1</VersionPatch>
     <VersionPrefix>$(VersionMajor).$(VersionMinor).$(VersionPatch)</VersionPrefix>
 
     <!-- NuGet Package Metadata -->
@@ -16,6 +16,6 @@
     <RepositoryUrl>https://github.com/ravelaso/UiPath.Selenium</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>selenium;uipath;webdriver;automation;net8;net10</PackageTags>
-    <PackageReleaseNotes>v0.1.0: Initial release with client operations, fluent locators, global delay pattern, and selenium-manager.exe bundled for production deployment</PackageReleaseNotes>
+    <PackageReleaseNotes>v0.1.1: Updated icon for package.</PackageReleaseNotes>
   </PropertyGroup>
 </Project>
