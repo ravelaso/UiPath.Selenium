@@ -1,5 +1,7 @@
 # Ravelaso.UiPath.Selenium
 
+![Publish Package](https://github.com/ravelaso/UiPath.Selenium/actions/workflows/publish-nuget-package.yml/badge.svg)
+
 Selenium WebDriver wrapper for .NET that simplifies web automation in UiPath Studio 25.10 and .NET projects.
 
 THIS IS WORK IN PROGRESS! Please do not take it seriously for now until a stable release is ready. API may change!
@@ -295,6 +297,14 @@ Extract `.nupkg` and copy DLLs manually to your project Libraries folder.
 ```bash
 & "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --remote-debugging-port=9222 --user-data-dir="C:\Temp\EdgeDebug"
 ```
+
+## Publishing
+
+Releases are published through GitHub Actions.
+
+- [Run or view the publish workflow](https://github.com/ravelaso/UiPath.Selenium/actions/workflows/publish-nuget-package.yml)
+- The workflow runs automatically when a pull request is merged into `main`.
+- It can also be triggered manually with `workflow_dispatch`.
 
 ## License
 
