@@ -21,6 +21,7 @@
         <!-- NuGet Pack Settings: Auto-pack in both Release and Debug -->
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageOutputPath>$(SolutionDir)dist</PackageOutputPath>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
         <IncludeSymbols>false</IncludeSymbols>
         <IncludeSource>false</IncludeSource>
         <DeterministicSourcePaths Condition="'$(Configuration)' == 'Release'">true</DeterministicSourcePaths>
@@ -72,3 +73,6 @@
     </ItemGroup>
 
 </Project>
+
+
+
