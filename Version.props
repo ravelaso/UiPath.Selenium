@@ -16,6 +16,6 @@
     <RepositoryUrl>https://github.com/ravelaso/UiPath.Selenium</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>selenium;uipath;webdriver;automation;net8;net10</PackageTags>
-    <PackageReleaseNotes>v0.2.0: Refactor API; Anchor system not dependant on client, client code refactored..</PackageReleaseNotes>
+    <PackageReleaseNotes>v0.2.0: Refactor API; Anchor system not dependant on client, client code refactored.. Breaking changes: Anchors now created by Loc.Anchor() not through client.CreateAnchor()</PackageReleaseNotes>
   </PropertyGroup>
 </Project>

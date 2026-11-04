@@ -1,5 +1,5 @@
 using OpenQA.Selenium;
-
+// ReSharper disable CheckNamespace
 namespace Ravelaso.UiPath.Selenium.Core;
 
 /// <summary>
