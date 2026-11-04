@@ -646,7 +646,7 @@ public class RavelasoWebClient : IDisposable
 
     /// <summary>
     /// Waits for an anchored element to appear, without requiring the caller to call
-    /// <see cref="AnchorLocator.Resolve"/>. Returns true as soon as the anchor resolves.
+    /// <see cref="AnchorLocator.Resolve()"/>. Returns true as soon as the anchor resolves.
     /// </summary>
     /// <param name="anchor">The anchor locator to resolve.</param>
     /// <param name="timeout">Maximum time to wait. If null, uses <see cref="ElementWaitTimeout"/>.</param>
@@ -662,7 +662,7 @@ public class RavelasoWebClient : IDisposable
             timeout ?? (ElementWaitTimeout > TimeSpan.Zero ? ElementWaitTimeout : TimeSpan.FromSeconds(60));
         try
         {
-            anchor.WithTimeout(effectiveTimeout).Resolve();
+            anchor.WithTimeout(effectiveTimeout).Resolve(this);
             return true;
         }
         catch (NoSuchElementException)
@@ -681,7 +681,7 @@ public class RavelasoWebClient : IDisposable
 
     /// <summary>
     /// Checks whether an anchored element appears within the specified timeout,
-    /// without requiring the caller to call <see cref="AnchorLocator.Resolve"/>.
+    /// without requiring the caller to call <see cref="AnchorLocator.Resolve()"/>.
     /// </summary>
     /// <param name="anchor">The anchor locator to resolve.</param>
     /// <param name="timeout">Maximum time to wait. If null, performs an immediate check.</param>
@@ -699,7 +699,7 @@ public class RavelasoWebClient : IDisposable
 
         try
         {
-            anchor.WithTimeout(effectiveTimeout).Resolve();
+            anchor.WithTimeout(effectiveTimeout).Resolve(this);
             return true;
         }
         catch (NoSuchElementException)
@@ -1689,38 +1689,88 @@ public class RavelasoWebClient : IDisposable
     #region Anchor System
 
     /// <summary>
-    /// Helper method to create an anchor locator using this client's driver.
-    /// Simplifies anchor creation by automatically providing the driver instance.
-    ///
-    /// Example:
-    /// <code>
-    /// var downloadBtn = client.CreateAnchor(Loc.Text("2026-10-22"))
-    ///     .Find(Loc.Css("button.download"))
-    ///     .Resolve();
-    ///
-    /// client.Click(downloadBtn);
-    /// </code>
+    /// Resolves an anchor using this client's driver.
     /// </summary>
-    /// <param name="anchorPoint">The locator for the anchor reference element.</param>
-    /// <returns>A new AnchorLocator configured with this client's driver and the anchor point.</returns>
-    /// <example>
-    /// <code>
-    /// // Single anchor
-    /// var welcome = client.CreateAnchor(Loc.Class("tasks-container-title").Tag("div"))
-    ///     .Find(Loc.Tag("h1").Class("ng-binding"))
-    ///     .Resolve();
-    ///
-    /// // Chained anchors
-    /// var cell = client.CreateAnchor(Loc.Tag("span").Text("108068_53467"))
-    ///     .CreateAnchor(Loc.Tag("span").Text("26702173"))
-    ///     .Find(Loc.Tag("span").Text("187.30"))
-    ///     .Resolve();
-    /// client.Click(cell);
-    /// </code>
-    /// </example>
-    public AnchorLocator CreateAnchor(Locator anchorPoint)
+    public Locator ResolveAnchor(AnchorLocator anchor, TimeSpan? timeout = null)
     {
-        return new(_driver, anchorPoint);
+        if (anchor == null)
+            throw new ArgumentNullException(nameof(anchor));
+
+        return timeout.HasValue
+            ? anchor.WithTimeout(timeout.Value).Resolve(this)
+            : anchor.Resolve(this);
+    }
+
+    public void Click(AnchorLocator anchor, TimeSpan? timeout = null)
+    {
+        if (anchor == null)
+            throw new ArgumentNullException(nameof(anchor));
+
+        Click(ResolveAnchor(anchor, timeout), timeout);
+    }
+
+    public void ClickJs(AnchorLocator anchor, TimeSpan? timeout = null)
+    {
+        if (anchor == null)
+            throw new ArgumentNullException(nameof(anchor));
+
+        ClickJs(ResolveAnchor(anchor, timeout), timeout);
+    }
+
+    public void ClickHidden(AnchorLocator anchor, Locator? hoverTarget = null, TimeSpan? timeout = null)
+    {
+        if (anchor == null)
+            throw new ArgumentNullException(nameof(anchor));
+
+        ClickHidden(ResolveAnchor(anchor, timeout), hoverTarget, timeout);
+    }
+
+    public void DoubleClick(AnchorLocator anchor, TimeSpan? timeout = null)
+    {
+        if (anchor == null)
+            throw new ArgumentNullException(nameof(anchor));
+
+        DoubleClick(ResolveAnchor(anchor, timeout), timeout);
+    }
+
+    public void Type(AnchorLocator anchor, string text, bool clear = true, TimeSpan? timeout = null)
+    {
+        if (anchor == null)
+            throw new ArgumentNullException(nameof(anchor));
+
+        Type(ResolveAnchor(anchor, timeout), text, clear, timeout);
+    }
+
+    public string GetText(AnchorLocator anchor, TimeSpan? timeout = null)
+    {
+        if (anchor == null)
+            throw new ArgumentNullException(nameof(anchor));
+
+        return GetText(ResolveAnchor(anchor, timeout), timeout);
+    }
+
+    public string? GetAttribute(AnchorLocator anchor, string attributeName, TimeSpan? timeout = null)
+    {
+        if (anchor == null)
+            throw new ArgumentNullException(nameof(anchor));
+
+        return GetAttribute(ResolveAnchor(anchor, timeout), attributeName, timeout);
+    }
+
+    public string DownloadFile(AnchorLocator anchor, string destinationPath, TimeSpan? timeout = null)
+    {
+        if (anchor == null)
+            throw new ArgumentNullException(nameof(anchor));
+
+        return DownloadFile(ResolveAnchor(anchor, timeout), destinationPath, timeout);
+    }
+
+    public bool IsDisplayed(AnchorLocator anchor, TimeSpan? timeout = null)
+    {
+        if (anchor == null)
+            throw new ArgumentNullException(nameof(anchor));
+
+        return IsDisplayed(ResolveAnchor(anchor, timeout), timeout);
     }
 
     #endregion

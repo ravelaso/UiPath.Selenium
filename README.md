@@ -157,10 +157,11 @@ Notes:
 
 ### Anchors
 
-- `CreateAnchor(locator)` — Create an anchor locator
+- `Loc.Anchor(locator)` — Create an anchor locator
+- `AnchorLocator.Anchor(anchor)` — Chain another anchor
 - `AnchorLocator.Find(target)` — Define target relative to anchor
-- `AnchorLocator.CreateAnchor(anchor)` — Chain another anchor
 - `AnchorLocator.Resolve()` — Resolve to a locator
+- `AnchorLocator.Resolve(client)` — Resolve using a client
 - `AnchorLocator.WithTimeout(timeout)` — Set anchor timeout
 - `AnchorLocator.WaitFor(...)` — Wait for anchored element
 - `AnchorLocator.Exists(...)` — Check anchored element
@@ -210,11 +211,9 @@ Loc.Attr("data-testid", "submit-button")
 Anchors find elements relative to stable reference elements. This is useful for dynamic tables and grids.
 
 ```csharp
-var downloadButton = client
-    .CreateAnchor(Loc.Text("Account 12345"))
-    .CreateAnchor(Loc.Text("02/11/2026 02:02"))
-    .Find(Loc.Tag("button").Class("download-button"))
-    .Resolve();
+var downloadButton = Loc.Anchor(Loc.Text("Account 12345"))
+    .Anchor(Loc.Text("02/11/2026 02:02"))
+    .Find(Loc.Tag("button").Class("download-button"));
 
 client.Click(downloadButton);
 ```
@@ -223,8 +222,7 @@ Wait for an anchored element without calling `Resolve()` first:
 
 ```csharp
 bool appeared = client.WaitFor(
-    client
-        .CreateAnchor(Loc.Tag("div").Class("notification-area"))
+    Loc.Anchor(Loc.Tag("div").Class("notification-area"))
         .Find(Loc.Tag("a").Text("Open download center")),
     TimeSpan.FromMinutes(2));
 ```
@@ -234,10 +232,8 @@ bool appeared = client.WaitFor(
 ## Downloads
 
 ```csharp
-var downloadButton = client
-    .CreateAnchor(Loc.Text("Account 12345"))
-    .Find(Loc.Tag("button").Class("download-button"))
-    .Resolve();
+var downloadButton = Loc.Anchor(Loc.Text("Account 12345"))
+    .Find(Loc.Tag("button").Class("download-button"));
 
 string savedPath = client.DownloadFile(
     downloadButton,
