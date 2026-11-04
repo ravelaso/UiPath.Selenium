@@ -5,7 +5,7 @@ namespace Ravelaso.UiPath.Selenium.Tests;
 
 class Program
 {
-    static void Main(string[] args)
+    static void Main()
     {
         Console.WriteLine("====================================================================");
         Console.WriteLine("  Ravelaso.UiPath.Selenium — Integration Tests & Demo");

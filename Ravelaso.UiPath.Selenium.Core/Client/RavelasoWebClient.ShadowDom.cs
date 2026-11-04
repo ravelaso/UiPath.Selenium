@@ -11,7 +11,8 @@ public partial class RavelasoWebClient
     /// </summary>
     /// <param name="hostLocator">Locator for the host element that owns the shadow root.</param>
     /// <param name="targetLocator">Locator for the element to find inside the shadow root.</param>
-    /// <param name="timeout">Optional custom timeout. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+    /// <param name="beforeStepDelay">Optional delay before this operation. If null, uses GlobalDelay.</param>
+/// <param name="timeout">Optional custom timeout. If null, uses <see cref="ElementWaitTimeout"/>.</param>
     /// <returns>The found element.</returns>
     /// <example>
     /// <code>
@@ -22,9 +23,9 @@ public partial class RavelasoWebClient
     /// Console.WriteLine(link.Text);
     /// </code>
     /// </example>
-    public IWebElement FindInShadowRoot(By hostLocator, By targetLocator, TimeSpan? timeout = null)
+    public IWebElement FindInShadowRoot(By hostLocator, By targetLocator, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
-        BeforeStep();
+        BeforeStep(beforeStepDelay);
         var wait = timeout ?? ElementWaitTimeout;
         if (wait <= TimeSpan.Zero)
         {
@@ -61,7 +62,7 @@ public partial class RavelasoWebClient
     /// <summary>
     /// Finds an element inside the shadow root of a host element (Locator overload).
     /// </summary>
-    public IWebElement FindInShadowRoot(Locator hostLocator, Locator targetLocator, TimeSpan? timeout = null)
+    public IWebElement FindInShadowRoot(Locator hostLocator, Locator targetLocator, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
         return FindInShadowRoot(hostLocator.ToBy(), targetLocator.ToBy(), timeout);
     }
@@ -69,9 +70,9 @@ public partial class RavelasoWebClient
     /// <summary>
     /// Checks whether an element exists inside the shadow root of a host element.
     /// </summary>
-    public bool ExistsInShadowRoot(By hostLocator, By targetLocator, TimeSpan? timeout = null)
+    public bool ExistsInShadowRoot(By hostLocator, By targetLocator, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
-        BeforeStep();
+        BeforeStep(beforeStepDelay);
         try
         {
             FindInShadowRoot(hostLocator, targetLocator, timeout ?? TimeSpan.Zero);
@@ -94,7 +95,7 @@ public partial class RavelasoWebClient
     /// <summary>
     /// Checks whether an element exists inside the shadow root of a host element (Locator overload).
     /// </summary>
-    public bool ExistsInShadowRoot(Locator hostLocator, Locator targetLocator, TimeSpan? timeout = null)
+    public bool ExistsInShadowRoot(Locator hostLocator, Locator targetLocator, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
         return ExistsInShadowRoot(hostLocator.ToBy(), targetLocator.ToBy(), timeout);
     }
@@ -104,7 +105,8 @@ public partial class RavelasoWebClient
     /// </summary>
     /// <param name="hostLocator">Locator for the host element that owns the shadow root.</param>
     /// <param name="targetLocator">Locator for the element to find inside the shadow root.</param>
-    /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+    /// <param name="beforeStepDelay">Optional delay before this operation. If null, uses GlobalDelay.</param>
+/// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
     /// <example>
     /// <code>
     /// // Click a link inside a Web Component's shadow root
@@ -113,9 +115,9 @@ public partial class RavelasoWebClient
     ///     Loc.Tag("a").Attr("href", "/ap/"));
     /// </code>
     /// </example>
-    public void ClickShadow(By hostLocator, By targetLocator, TimeSpan? timeout = null)
+    public void ClickShadow(By hostLocator, By targetLocator, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
-        BeforeStep();
+        BeforeStep(beforeStepDelay);
         var element = FindInShadowRoot(hostLocator, targetLocator, timeout);
         element.Click();
     }
@@ -123,7 +125,7 @@ public partial class RavelasoWebClient
     /// <summary>
     /// Clicks an element located inside the shadow root of a host element (Locator overload).
     /// </summary>
-    public void ClickShadow(Locator hostLocator, Locator targetLocator, TimeSpan? timeout = null)
+    public void ClickShadow(Locator hostLocator, Locator targetLocator, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
         ClickShadow(hostLocator.ToBy(), targetLocator.ToBy(), timeout);
     }
@@ -138,3 +140,4 @@ public partial class RavelasoWebClient
         element.Click();
     }
 }
+

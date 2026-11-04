@@ -36,3 +36,4 @@ public partial class RavelasoWebClient
         ((IJavaScriptExecutor)_driver).ExecuteScript(script);
     }
 }
+

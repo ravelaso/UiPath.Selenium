@@ -12,7 +12,8 @@ public partial class RavelasoWebClient
     /// elements (e.g. a "clear" button that only appears on input hover).
     /// </summary>
     /// <param name="locator">The element locator.</param>
-    /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+    /// <param name="beforeStepDelay">Optional delay before this operation. If null, uses GlobalDelay.</param>
+/// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
     /// <example>
     /// <code>
     /// // Hover over an input to reveal a clear button
@@ -21,9 +22,9 @@ public partial class RavelasoWebClient
     /// client.ClickJs(Loc.Tag("button").Attr("data-t-id", "clear-datepicker"));
     /// </code>
     /// </example>
-    public void Hover(By locator, TimeSpan? timeout = null)
+    public void Hover(By locator, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
-        BeforeStep();
+        BeforeStep(beforeStepDelay);
         var element = WaitElement(locator, timeout);
         new Actions(_driver).MoveToElement(element).Perform();
     }
@@ -32,8 +33,9 @@ public partial class RavelasoWebClient
     /// Moves the mouse over an element (Locator overload).
     /// </summary>
     /// <param name="locator">The element locator.</param>
-    /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
-    public void Hover(Locator locator, TimeSpan? timeout = null)
+    /// <param name="beforeStepDelay">Optional delay before this operation. If null, uses GlobalDelay.</param>
+/// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+    public void Hover(Locator locator, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
         Hover(locator.ToBy(), timeout);
     }
@@ -45,7 +47,8 @@ public partial class RavelasoWebClient
     /// </summary>
     /// <param name="buttonLocator">The element to click.</param>
     /// <param name="hoverTarget">Optional element to hover in order to reveal the button. If null, auto-discovered.</param>
-    /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+    /// <param name="beforeStepDelay">Optional delay before this operation. If null, uses GlobalDelay.</param>
+/// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
     /// <example>
     /// <code>
     /// // Hover and click a hover-revealed clear button
@@ -54,9 +57,9 @@ public partial class RavelasoWebClient
     /// client.HoverAndClick(clearBtn, inputs);
     /// </code>
     /// </example>
-    private void HoverAndClick(By buttonLocator, By hoverTarget, TimeSpan? timeout = null)
+    private void HoverAndClick(By buttonLocator, By hoverTarget, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
-        BeforeStep();
+        BeforeStep(beforeStepDelay);
 
         // 1. Hover con delay global + wait condicional (como ForceClick que funcionaba)
         Hover(hoverTarget);
@@ -80,7 +83,7 @@ public partial class RavelasoWebClient
     /// <summary>
     /// Hovers and clicks (Locator overload).
     /// </summary>
-    public void HoverAndClick(Locator buttonLocator, Locator? hoverTarget = null, TimeSpan? timeout = null)
+    public void HoverAndClick(Locator buttonLocator, Locator? hoverTarget = null, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
         HoverAndClick(buttonLocator.ToBy(), hoverTarget?.ToBy()!, timeout);
     }
@@ -88,9 +91,9 @@ public partial class RavelasoWebClient
     /// <summary>
     /// Hovers and clicks (IWebElement hover target overload).
     /// </summary>
-    public void HoverAndClick(By buttonLocator, IWebElement hoverTarget, TimeSpan? timeout = null)
+    public void HoverAndClick(By buttonLocator, IWebElement hoverTarget, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
-        BeforeStep();
+        BeforeStep(beforeStepDelay);
         var wait = timeout ?? ElementWaitTimeout;
         var js = (IJavaScriptExecutor)_driver;
         var sw = Stopwatch.StartNew();
@@ -224,7 +227,8 @@ public partial class RavelasoWebClient
     /// Retries automatically on StaleElementReferenceException (Angular re-render).
     /// </summary>
     /// <param name="locator">The element locator.</param>
-    /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+    /// <param name="beforeStepDelay">Optional delay before this operation. If null, uses GlobalDelay.</param>
+/// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
     /// <example>
     /// <code>
     /// // Click a hidden or intercepted button
@@ -232,9 +236,9 @@ public partial class RavelasoWebClient
     ///
     /// </code>
     /// </example>
-    public void ClickJs(By locator, TimeSpan? timeout = null)
+    public void ClickJs(By locator, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
-        BeforeStep();
+        BeforeStep(beforeStepDelay);
         var wait = timeout ?? ElementWaitTimeout;
         var sw = Stopwatch.StartNew();
         while (sw.Elapsed < wait)
@@ -262,7 +266,8 @@ public partial class RavelasoWebClient
     /// and standard clicks don't trigger the handler.
     /// </summary>
     /// <param name="buttonCss">CSS selector of the button to click.</param>
-    /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+    /// <param name="beforeStepDelay">Optional delay before this operation. If null, uses GlobalDelay.</param>
+/// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
     /// <example>
     /// <code>
     /// // Click a hover-revealed clear button
@@ -272,9 +277,9 @@ public partial class RavelasoWebClient
     /// client.ClickHiddenJs("button[data-t-id='clear-datepicker']", TimeSpan.FromSeconds(15));
     /// </code>
     /// </example>
-    private void ClickHiddenJs(string buttonCss, TimeSpan? timeout = null)
+    private void ClickHiddenJs(string buttonCss, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
-        BeforeStep();
+        BeforeStep(beforeStepDelay);
         var js = (IJavaScriptExecutor)_driver;
         var sw = Stopwatch.StartNew();
         var wait = timeout ?? ElementWaitTimeout;
@@ -312,8 +317,9 @@ public partial class RavelasoWebClient
     /// Finds the element, forces its visibility, and clicks it — all in one script.
     /// </summary>
     /// <param name="button">Locator of the button to click.</param>
-    /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
-    private void ClickHiddenJs(Locator button, TimeSpan? timeout = null)
+    /// <param name="beforeStepDelay">Optional delay before this operation. If null, uses GlobalDelay.</param>
+/// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+    private void ClickHiddenJs(Locator button, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
         var (bMech, bCrit) = GetJsSelector((By)button);
         if (bMech != "css selector")
@@ -360,8 +366,9 @@ public partial class RavelasoWebClient
     /// Clicks an element using JavaScript (Locator overload).
     /// </summary>
     /// <param name="locator">The element locator.</param>
-    /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
-    public void ClickJs(Locator locator, TimeSpan? timeout = null)
+    /// <param name="beforeStepDelay">Optional delay before this operation. If null, uses GlobalDelay.</param>
+/// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+    public void ClickJs(Locator locator, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
         ClickJs(locator.ToBy(), timeout);
     }
@@ -375,10 +382,11 @@ public partial class RavelasoWebClient
     /// </summary>
     /// <param name="locator">The element locator.</param>
     /// <param name="hoverTarget">Optional locator of the element to hover to reveal <paramref name="locator"/>.</param>
-    /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
-    public void ClickHidden(By locator, By? hoverTarget = null, TimeSpan? timeout = null)
+    /// <param name="beforeStepDelay">Optional delay before this operation. If null, uses GlobalDelay.</param>
+/// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+    public void ClickHidden(By locator, By? hoverTarget = null, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
-        BeforeStep();
+        BeforeStep(beforeStepDelay);
         var js = (IJavaScriptExecutor)_driver;
 
         // Helper: hover if target is available
@@ -544,7 +552,7 @@ public partial class RavelasoWebClient
     /// <summary>
     /// Clicks a hidden/intercepted element (Locator overload).
     /// </summary>
-    public void ClickHidden(Locator locator, Locator? hoverTarget = null, TimeSpan? timeout = null)
+    public void ClickHidden(Locator locator, Locator? hoverTarget = null, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
         ClickHidden(locator.ToBy(), hoverTarget?.ToBy(), timeout);
     }
@@ -552,9 +560,9 @@ public partial class RavelasoWebClient
     /// <summary>
     /// Clicks a hidden/intercepted element (IWebElement hover target overload).
     /// </summary>
-    public void ClickHidden(By locator, IWebElement hoverTarget, TimeSpan? timeout = null)
+    public void ClickHidden(By locator, IWebElement hoverTarget, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
-        BeforeStep();
+        BeforeStep(beforeStepDelay);
         try
         {
             new Actions(_driver).MoveToElement(hoverTarget).Perform();
@@ -579,3 +587,4 @@ public partial class RavelasoWebClient
         js.ExecuteScript("arguments[0].click();", element);
     }
 }
+

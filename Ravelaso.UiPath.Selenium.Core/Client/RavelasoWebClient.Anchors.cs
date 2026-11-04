@@ -7,7 +7,7 @@ public partial class RavelasoWebClient
     /// <summary>
     /// Resolves an anchor using this client's driver.
     /// </summary>
-    public Locator ResolveAnchor(AnchorLocator anchor, TimeSpan? timeout = null)
+    public Locator ResolveAnchor(AnchorLocator anchor, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
         if (anchor == null)
             throw new ArgumentNullException(nameof(anchor));
@@ -17,7 +17,7 @@ public partial class RavelasoWebClient
             : anchor.Resolve(this);
     }
 
-    public void Click(AnchorLocator anchor, TimeSpan? timeout = null)
+    public void Click(AnchorLocator anchor, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
         if (anchor == null)
             throw new ArgumentNullException(nameof(anchor));
@@ -25,7 +25,7 @@ public partial class RavelasoWebClient
         Click(ResolveAnchor(anchor, timeout), timeout);
     }
 
-    public void ClickJs(AnchorLocator anchor, TimeSpan? timeout = null)
+    public void ClickJs(AnchorLocator anchor, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
         if (anchor == null)
             throw new ArgumentNullException(nameof(anchor));
@@ -33,7 +33,7 @@ public partial class RavelasoWebClient
         ClickJs(ResolveAnchor(anchor, timeout), timeout);
     }
 
-    public void ClickHidden(AnchorLocator anchor, Locator? hoverTarget = null, TimeSpan? timeout = null)
+    public void ClickHidden(AnchorLocator anchor, Locator? hoverTarget = null, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
         if (anchor == null)
             throw new ArgumentNullException(nameof(anchor));
@@ -41,7 +41,7 @@ public partial class RavelasoWebClient
         ClickHidden(ResolveAnchor(anchor, timeout), hoverTarget, timeout);
     }
 
-    public void DoubleClick(AnchorLocator anchor, TimeSpan? timeout = null)
+    public void DoubleClick(AnchorLocator anchor, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
         if (anchor == null)
             throw new ArgumentNullException(nameof(anchor));
@@ -49,7 +49,7 @@ public partial class RavelasoWebClient
         DoubleClick(ResolveAnchor(anchor, timeout), timeout);
     }
 
-    public void Type(AnchorLocator anchor, string text, bool clear = true, TimeSpan? timeout = null)
+    public void Type(AnchorLocator anchor, string text, bool clear = true, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
         if (anchor == null)
             throw new ArgumentNullException(nameof(anchor));
@@ -57,7 +57,7 @@ public partial class RavelasoWebClient
         Type(ResolveAnchor(anchor, timeout), text, clear, timeout);
     }
 
-    public string GetText(AnchorLocator anchor, TimeSpan? timeout = null)
+    public string GetText(AnchorLocator anchor, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
         if (anchor == null)
             throw new ArgumentNullException(nameof(anchor));
@@ -65,7 +65,7 @@ public partial class RavelasoWebClient
         return GetText(ResolveAnchor(anchor, timeout), timeout);
     }
 
-    public string? GetAttribute(AnchorLocator anchor, string attributeName, TimeSpan? timeout = null)
+    public string? GetAttribute(AnchorLocator anchor, string attributeName, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
         if (anchor == null)
             throw new ArgumentNullException(nameof(anchor));
@@ -73,7 +73,7 @@ public partial class RavelasoWebClient
         return GetAttribute(ResolveAnchor(anchor, timeout), attributeName, timeout);
     }
 
-    public bool IsDisplayed(AnchorLocator anchor, TimeSpan? timeout = null)
+    public bool IsDisplayed(AnchorLocator anchor, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
         if (anchor == null)
             throw new ArgumentNullException(nameof(anchor));
@@ -81,7 +81,7 @@ public partial class RavelasoWebClient
         return IsDisplayed(ResolveAnchor(anchor, timeout), timeout);
     }
 
-    public string DownloadFile(AnchorLocator anchor, string destinationPath, TimeSpan? timeout = null)
+    public string DownloadFile(AnchorLocator anchor, string destinationPath, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
         if (anchor == null)
             throw new ArgumentNullException(nameof(anchor));
@@ -89,3 +89,4 @@ public partial class RavelasoWebClient
         return DownloadFile(ResolveAnchor(anchor, timeout), destinationPath, timeout);
     }
 }
+

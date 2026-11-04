@@ -99,13 +99,14 @@ public partial class RavelasoWebClient : IDisposable
     /// Can be overridden in derived classes to add custom logic.
     /// </summary>
     /// <exception cref="ObjectDisposedException">If the client has been disposed.</exception>
-    protected virtual void BeforeStep()
+    protected virtual void BeforeStep(TimeSpan? delay = null)
     {
         if (_disposed)
             throw new ObjectDisposedException(nameof(RavelasoWebClient));
 
-        if (GlobalDelay > TimeSpan.Zero)
-            Thread.Sleep(GlobalDelay);
+        var effectiveDelay = delay ?? GlobalDelay;
+        if (effectiveDelay > TimeSpan.Zero)
+            Thread.Sleep(effectiveDelay);
     }
 
     /// <summary>
@@ -114,7 +115,7 @@ public partial class RavelasoWebClient : IDisposable
     /// search through any open Shadow DOM roots so that Web Components (e.g.
     /// &lt;alusta-navigation&gt;) are supported transparently by every API method.
     /// </summary>
-    protected IWebElement WaitElement(By locator, TimeSpan? timeout = null)
+    protected IWebElement WaitElement(By locator, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
         var wait = timeout ?? ElementWaitTimeout;
 
@@ -247,3 +248,4 @@ public partial class RavelasoWebClient : IDisposable
         GC.SuppressFinalize(this);
     }
 }
+

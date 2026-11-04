@@ -16,7 +16,7 @@ public partial class RavelasoWebClient
     // /// <returns>A multi-line diagnostic report.</returns>
     // private string DiagnoseClearButton(By clearBtnLocator, By inputLocator, By? hoverTargetLocator = null)
     // {
-    //     BeforeStep();
+    //     BeforeStep(beforeStepDelay);
     //     var js = (IJavaScriptExecutor)_driver;
     //     var sb = new System.Text.StringBuilder();
     //     var input = WaitElement(inputLocator, TimeSpan.Zero);
@@ -184,3 +184,4 @@ public partial class RavelasoWebClient
         return ((IJavaScriptExecutor)_driver).ExecuteScript(script, args);
     }
 }
+

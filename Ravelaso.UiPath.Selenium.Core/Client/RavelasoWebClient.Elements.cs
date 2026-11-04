@@ -10,7 +10,8 @@ public partial class RavelasoWebClient
     /// Clicks an element located by the given locator.
     /// </summary>
     /// <param name="locator">The element locator.</param>
-    /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+    /// <param name="beforeStepDelay">Optional delay before this operation. If null, uses GlobalDelay.</param>
+/// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
     /// <example>
     /// <code>
     /// // Click a button by data-t-id
@@ -20,9 +21,9 @@ public partial class RavelasoWebClient
     /// client.Click(Loc.Tag("a").Attr("href", "/ap/"), TimeSpan.FromSeconds(30));
     /// </code>
     /// </example>
-    public void Click(By locator, TimeSpan? timeout = null)
+    public void Click(By locator, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
-        BeforeStep();
+        BeforeStep(beforeStepDelay);
         var element = WaitElement(locator, timeout);
         element.Click();
     }
@@ -32,7 +33,8 @@ public partial class RavelasoWebClient
     /// Useful for grids (e.g., ag-grid) where double-clicking a row opens the detail page.
     /// </summary>
     /// <param name="locator">The element locator.</param>
-    /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+    /// <param name="beforeStepDelay">Optional delay before this operation. If null, uses GlobalDelay.</param>
+/// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
     /// <example>
     /// <code>
     /// // Double-click a resolved anchor cell
@@ -45,9 +47,9 @@ public partial class RavelasoWebClient
     /// client.DoubleClick(Loc.Tag("span").Text("187.30"));
     /// </code>
     /// </example>
-    public void DoubleClick(By locator, TimeSpan? timeout = null)
+    public void DoubleClick(By locator, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
-        BeforeStep();
+        BeforeStep(beforeStepDelay);
         var element = WaitElement(locator, timeout);
         new Actions(_driver).DoubleClick(element).Perform();
     }
@@ -55,7 +57,7 @@ public partial class RavelasoWebClient
     /// <summary>
     /// Double-clicks an element (Locator overload).
     /// </summary>
-    public void DoubleClick(Locator locator, TimeSpan? timeout = null)
+    public void DoubleClick(Locator locator, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
         DoubleClick(locator.ToBy(), timeout);
     }
@@ -66,7 +68,8 @@ public partial class RavelasoWebClient
     /// <param name="locator">The element locator.</param>
     /// <param name="text">The text to enter.</param>
     /// <param name="clear">If true, clears the field before typing. Default: true.</param>
-    /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+    /// <param name="beforeStepDelay">Optional delay before this operation. If null, uses GlobalDelay.</param>
+/// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
     /// <example>
     /// <code>
     /// // Type into an input by id
@@ -76,9 +79,9 @@ public partial class RavelasoWebClient
     /// client.Type(Loc.Id("search"), "query", clear: false);
     /// </code>
     /// </example>
-    public void Type(By locator, string text, bool clear = true, TimeSpan? timeout = null)
+    public void Type(By locator, string text, bool clear = true, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
-        BeforeStep();
+        BeforeStep(beforeStepDelay);
         var element = WaitElement(locator, timeout);
 
         if (clear)
@@ -98,7 +101,8 @@ public partial class RavelasoWebClient
     /// Gets the visible text of an element.
     /// </summary>
     /// <param name="locator">The element locator.</param>
-    /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+    /// <param name="beforeStepDelay">Optional delay before this operation. If null, uses GlobalDelay.</param>
+/// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
     /// <example>
     /// <code>
     /// // Get the text of a heading
@@ -108,9 +112,9 @@ public partial class RavelasoWebClient
     /// var msg = client.GetText(Loc.Id("status"), TimeSpan.FromSeconds(15));
     /// </code>
     /// </example>
-    public string GetText(By locator, TimeSpan? timeout = null)
+    public string GetText(By locator, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
-        BeforeStep();
+        BeforeStep(beforeStepDelay);
         return WaitElement(locator, timeout).Text;
     }
 
@@ -119,7 +123,8 @@ public partial class RavelasoWebClient
     /// </summary>
     /// <param name="locator">The element locator.</param>
     /// <param name="attributeName">The attribute name (e.g., "value", "href", "data-id").</param>
-    /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+    /// <param name="beforeStepDelay">Optional delay before this operation. If null, uses GlobalDelay.</param>
+/// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
     /// <example>
     /// <code>
     /// // Get the href of a link
@@ -129,9 +134,10 @@ public partial class RavelasoWebClient
     /// var val = client.GetAttribute(Loc.Id("username"), "value");
     /// </code>
     /// </example>
-    public string? GetAttribute(By locator, string attributeName, TimeSpan? timeout = null)
+    public string? GetAttribute(By locator, string attributeName, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
-        BeforeStep();
+        BeforeStep(beforeStepDelay);
         return WaitElement(locator, timeout).GetAttribute(attributeName);
     }
 }
+

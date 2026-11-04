@@ -13,11 +13,12 @@ public partial class RavelasoWebClient
     /// </summary>
     /// <param name="downloadButton">Locator for the element that triggers the download.</param>
     /// <param name="destinationPath">Final path where the downloaded file should be saved.</param>
-    /// <param name="timeout">Optional timeout. Defaults to <see cref="ElementWaitTimeout"/> or 60 seconds.</param>
+    /// <param name="beforeStepDelay">Optional delay before this operation. If null, uses GlobalDelay.</param>
+/// <param name="timeout">Optional timeout. Defaults to <see cref="ElementWaitTimeout"/> or 60 seconds.</param>
     /// <returns>The final path of the downloaded file.</returns>
-    public string DownloadFile(Locator downloadButton, string destinationPath, TimeSpan? timeout = null)
+    public string DownloadFile(Locator downloadButton, string destinationPath, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
-        BeforeStep();
+        BeforeStep(beforeStepDelay);
 
         if (downloadButton == null)
             throw new ArgumentNullException(nameof(downloadButton));
@@ -46,9 +47,9 @@ public partial class RavelasoWebClient
     /// <summary>
     /// Downloads a file from a direct URL using the browser cookies/session.
     /// </summary>
-    public string DownloadFromUrl(string url, string destinationPath, TimeSpan? timeout = null)
+    public string DownloadFromUrl(string url, string destinationPath, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
-        BeforeStep();
+        BeforeStep(beforeStepDelay);
 
         if (string.IsNullOrWhiteSpace(url))
             throw new ArgumentException("URL cannot be empty.", nameof(url));
@@ -81,3 +82,4 @@ public partial class RavelasoWebClient
     }
 
 }
+

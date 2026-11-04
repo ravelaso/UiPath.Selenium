@@ -10,10 +10,11 @@ public partial class RavelasoWebClient
     /// </summary>
     /// <param name="locator">The &lt;select&gt; element locator.</param>
     /// <param name="value">The value or visible text to select.</param>
-    /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
-    public bool Select(By locator, string value, TimeSpan? timeout = null)
+    /// <param name="beforeStepDelay">Optional delay before this operation. If null, uses GlobalDelay.</param>
+/// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+    public bool Select(By locator, string value, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
-        BeforeStep();
+        BeforeStep(beforeStepDelay);
         var element = WaitElement(locator, timeout);
         return SelectNative(element, value);
     }
@@ -23,10 +24,11 @@ public partial class RavelasoWebClient
     /// </summary>
     /// <param name="locator">The &lt;select&gt; element locator.</param>
     /// <param name="index">The 0-based index of the option to select.</param>
-    /// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
-    public bool SelectByIndex(By locator, int index, TimeSpan? timeout = null)
+    /// <param name="beforeStepDelay">Optional delay before this operation. If null, uses GlobalDelay.</param>
+/// <param name="timeout">Optional timeout override for this operation. If null, uses <see cref="ElementWaitTimeout"/>.</param>
+    public bool SelectByIndex(By locator, int index, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
-        BeforeStep();
+        BeforeStep(beforeStepDelay);
         var element = WaitElement(locator, timeout);
         return SelectByIndexNative(element, index);
     }
@@ -69,3 +71,4 @@ public partial class RavelasoWebClient
         return true;
     }
 }
+

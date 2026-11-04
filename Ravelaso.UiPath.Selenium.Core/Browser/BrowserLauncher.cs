@@ -22,7 +22,7 @@ public static class BrowserLauncher
         if (string.IsNullOrWhiteSpace(options.DebuggerAddress))
             options.DebuggerAddress = "localhost:9222";
 
-        var (host, port) = ParseAddress(options.DebuggerAddress);
+        var (_, port) = ParseAddress(options.DebuggerAddress);
 
         if (IsDebugPortOpen(options.DebuggerAddress))
             return null;

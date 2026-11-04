@@ -87,16 +87,16 @@ client.Click(Loc.Tag("a").Text("Sign in"));
 
 ```csharp
 // Wait up to 10 seconds for an element to appear
-bool loaded = client.WaitFor(Loc.Tag("h1").Text("Dashboard"), TimeSpan.FromSeconds(10));
+bool loaded = client.WaitFor(Loc.Tag("h1").Text("Dashboard"), null, TimeSpan.FromSeconds(10));
 
 if (!loaded)
     throw new TimeoutException("Dashboard did not load.");
 
 // Immediate existence check
-bool hasError = client.Exists(Loc.Id("error-panel"), TimeSpan.Zero);
+bool hasError = client.Exists(Loc.Id("error-panel"), null, TimeSpan.Zero);
 
 // Check visibility
-bool isVisible = client.IsDisplayed(Loc.Id("submit-button"), TimeSpan.FromSeconds(5));
+bool isVisible = client.IsDisplayed(Loc.Id("submit-button"), null, TimeSpan.FromSeconds(5));
 ```
 
 ## 4. Anchors
@@ -132,6 +132,7 @@ client.DoubleClick(invoiceValue);
 bool appeared = client.WaitFor(
     Loc.Anchor(Loc.Tag("div").Class("notification-area"))
         .Find(Loc.Tag("a").Class("download-link").Text("Open download center")),
+    null,
     TimeSpan.FromMinutes(2));
 
 if (!appeared)
@@ -214,6 +215,7 @@ var downloadButton = Loc.Anchor(Loc.Text("Account 12345"))
 string savedPath = client.DownloadFile(
     downloadButton,
     @"C:\Automation\report.xlsx",
+    null,
     TimeSpan.FromMinutes(2));
 
 Console.WriteLine($"Downloaded: {savedPath}");
