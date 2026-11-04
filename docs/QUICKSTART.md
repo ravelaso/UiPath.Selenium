@@ -93,10 +93,10 @@ if (!loaded)
     throw new TimeoutException("Dashboard did not load.");
 
 // Immediate existence check
-bool hasError = client.Exists(Loc.Id("error-panel"), TimeSpan.Zero);
+bool hasError = client.Exists(Loc.Id("error-panel"), null, TimeSpan.Zero);
 
 // Check visibility
-bool isVisible = client.IsDisplayed(Loc.Id("submit-button"), TimeSpan.FromSeconds(5));
+bool isVisible = client.IsDisplayed(Loc.Id("submit-button"), null, TimeSpan.FromSeconds(5));
 ```
 
 ## 4. Anchors
@@ -106,10 +106,8 @@ Anchors find an element relative to a stable reference element. This is useful f
 ### Single anchor
 
 ```csharp
-var title = client
-    .CreateAnchor(Loc.Class("tasks-container-title").Tag("div"))
-    .Find(Loc.Tag("h1").Class("ng-binding"))
-    .Resolve();
+var title = Loc.Anchor(Loc.Class("tasks-container-title").Tag("div"))
+    .Find(Loc.Tag("h1").Class("ng-binding"));
 
 client.Click(title);
 ```
@@ -119,11 +117,9 @@ client.Click(title);
 Use multiple anchors when one reference is not enough.
 
 ```csharp
-var invoiceValue = client
-    .CreateAnchor(Loc.Text("Account 12345"))
-    .CreateAnchor(Loc.Text("Invoice 98765"))
-    .Find(Loc.Text("-1,234.56"))
-    .Resolve();
+var invoiceValue = Loc.Anchor(Loc.Text("Account 12345"))
+    .Anchor(Loc.Text("Invoice 98765"))
+    .Find(Loc.Text("-1,234.56"));
 
 client.DoubleClick(invoiceValue);
 ```
@@ -134,8 +130,7 @@ client.DoubleClick(invoiceValue);
 
 ```csharp
 bool appeared = client.WaitFor(
-    client
-        .CreateAnchor(Loc.Tag("div").Class("notification-area"))
+    Loc.Anchor(Loc.Tag("div").Class("notification-area"))
         .Find(Loc.Tag("a").Class("download-link").Text("Open download center")),
     TimeSpan.FromMinutes(2));
 
@@ -146,11 +141,9 @@ if (!appeared)
 ### Timeout for slow pages
 
 ```csharp
-var element = client
-    .CreateAnchor(Loc.Text("Account 12345"))
+var element = Loc.Anchor(Loc.Text("Account 12345"))
     .Find(Loc.Tag("button").Class("action-button"))
-    .WithTimeout(TimeSpan.FromMinutes(2))
-    .Resolve();
+    .WithTimeout(TimeSpan.FromMinutes(2));
 ```
 
 ## 5. Dynamic table example
@@ -161,11 +154,9 @@ This pattern is useful when rows move or change every day.
 client.Navigate("https://app.example.com/reports");
 
 // Select the download button in the row containing both values.
-var downloadButton = client
-    .CreateAnchor(Loc.Text("Account 12345"))
-    .CreateAnchor(Loc.Text("02/11/2026 02:02"))
-    .Find(Loc.Tag("button").Class("download-button"))
-    .Resolve();
+var downloadButton = Loc.Anchor(Loc.Text("Account 12345"))
+    .Anchor(Loc.Text("02/11/2026 02:02"))
+    .Find(Loc.Tag("button").Class("download-button"));
 
 client.Click(downloadButton);
 ```
@@ -217,14 +208,13 @@ Zoom can help anchors and tables that load content based on the visible viewport
 `DownloadFile` downloads a file triggered by an element and saves it to the final destination path.
 
 ```csharp
-var downloadButton = client
-    .CreateAnchor(Loc.Text("Account 12345"))
-    .Find(Loc.Tag("button").Class("download-button"))
-    .Resolve();
+var downloadButton = Loc.Anchor(Loc.Text("Account 12345"))
+    .Find(Loc.Tag("button").Class("download-button"));
 
 string savedPath = client.DownloadFile(
     downloadButton,
     @"C:\Automation\report.xlsx",
+    null,
     TimeSpan.FromMinutes(2));
 
 Console.WriteLine($"Downloaded: {savedPath}");

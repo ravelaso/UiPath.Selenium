@@ -1,6 +1,5 @@
 using Xunit;
 using Ravelaso.UiPath.Selenium.Core;
-using System.Diagnostics;
 
 namespace Ravelaso.UiPath.Selenium.Tests;
 
@@ -187,7 +186,7 @@ public class ClientOperationsTests : IDisposable
         Client.Navigate(dataUrl);
 
         // Result div is hidden initially (display:none in CSS)
-        var displayBefore = Client.ExecuteScript("return document.getElementById('result').style.display;") ?? "";
+        _ = Client.ExecuteScript("return document.getElementById('result').style.display;") ?? "";
 
         // Click button
         Client.Click(Loc.Id("submit"));

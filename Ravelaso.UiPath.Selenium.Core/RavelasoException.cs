@@ -1,5 +1,3 @@
-using System;
-
 namespace Ravelaso.UiPath.Selenium.Core;
 
 /// <summary>

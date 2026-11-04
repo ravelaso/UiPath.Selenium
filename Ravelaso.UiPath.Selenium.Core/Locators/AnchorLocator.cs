@@ -1,29 +1,29 @@
 using OpenQA.Selenium;
 using System.Diagnostics;
-using System.Threading;
 
+// ReSharper disable CheckNamespace
 namespace Ravelaso.UiPath.Selenium.Core;
 
 /// <summary>
 /// Represents an anchor-based element locator that finds target elements relative to a reference (anchor) element.
 /// Implements a fluent API for building anchor searches with optional direction constraints.
-/// 
+///
 /// The anchor system automatically searches all directions (Right, Left, Below, Above, SameRow, SameContainer, Innermost, Anywhere)
 /// and returns the first match found. If a specific search order is needed, use SearchOrder() or ExactDirection().
-/// 
+///
 /// Example:
 /// <code>
 /// // Find download button in the row with date "2026-10-22"
 /// var downloadBtn = Loc.Anchor(client._driver)
 ///     .Find(Loc.Css("button.download"))
 ///     .Resolve();
-/// 
+///
 /// client.Click(downloadBtn);
 /// </code>
 /// </summary>
 public class AnchorLocator
 {
-    private readonly IWebDriver _driver;
+    private IWebDriver? _driver;
     private readonly List<Locator> _anchors = new();
     private Locator? _target;
     private Direction[]? _searchOrder;
@@ -38,6 +38,16 @@ public class AnchorLocator
     public AnchorLocator(IWebDriver driver, Locator anchor)
     {
         _driver = driver ?? throw new ArgumentNullException(nameof(driver));
+        _anchors.Add(anchor ?? throw new ArgumentNullException(nameof(anchor)));
+    }
+
+    /// <summary>
+    /// Creates a new anchor locator without a driver.
+    /// The driver is supplied later through Resolve(client), Resolve(driver),
+    /// or by passing the anchor to a client method.
+    /// </summary>
+    public AnchorLocator(Locator anchor)
+    {
         _anchors.Add(anchor ?? throw new ArgumentNullException(nameof(anchor)));
     }
 
@@ -84,7 +94,7 @@ public class AnchorLocator
     ///     .Resolve();
     /// </code>
     /// </example>
-    public AnchorLocator CreateAnchor(Locator anchor)
+    public AnchorLocator Anchor(Locator anchor)
     {
         _anchors.Add(anchor ?? throw new ArgumentNullException(nameof(anchor)));
         return this;
@@ -154,8 +164,36 @@ public class AnchorLocator
     /// </example>
     public Locator Resolve()
     {
+        if (_driver == null)
+            throw new InvalidOperationException("This anchor has no driver. Call Resolve(driver), Resolve(client), or pass it to a client method.");
+
+        return ResolveCore();
+    }
+
+    public Locator Resolve(IWebDriver driver)
+    {
+        if (driver == null)
+            throw new ArgumentNullException(nameof(driver));
+
+        _driver ??= driver;
+        return ResolveCore();
+    }
+
+    public Locator Resolve(RavelasoWebClient client)
+    {
+        if (client == null)
+            throw new ArgumentNullException(nameof(client));
+
+        return Resolve(client.Driver);
+    }
+
+    private Locator ResolveCore()
+    {
         if (_target == null)
             throw new InvalidOperationException("Target not defined. Call Find() before Resolve().");
+
+        if (_driver == null)
+            throw new InvalidOperationException("This anchor has no driver. Call Resolve(driver), Resolve(client), or pass it to a client method.");
 
         var directionsToTry = _searchOrder ?? GetExhaustiveOrder();
         var structural = directionsToTry.Where(d => d != Direction.Anywhere).ToArray();
@@ -170,7 +208,7 @@ public class AnchorLocator
         {
             try
             {
-                var targetElements = _driver.FindElements(targetBy);
+                var targetElements = _driver!.FindElements(targetBy);
 
                 // Resolve the chain of anchors: every combination of non-unique
                 // intermediate anchors is tried, so multi-criteria anchors (e.g.
@@ -229,10 +267,10 @@ public class AnchorLocator
         // Nothing found in any direction within the timeout. Recompute diagnostic
         // counts so callers can distinguish a bad anchor from a bad target.
         var firstAnchorCandidates = _anchors.Count > 0
-            ? _driver.FindElements(_anchors[0].ToBy()).Count
+            ? _driver!.FindElements(_anchors[0].ToBy()).Count
             : 0;
         var resolvedAnchorChains = ResolveAnchorChain(structural).Count;
-        var targetCandidates = _driver.FindElements(targetBy).Count;
+        var targetCandidates = _driver!.FindElements(targetBy).Count;
 
         throw new NoSuchElementException(
             $"Anchor search failed: could not find target relative to anchor.\n" +
@@ -256,7 +294,7 @@ public class AnchorLocator
     public IWebElement ResolveElement()
     {
         var locator = Resolve();
-        return _driver.FindElement(locator.ToBy());
+        return _driver!.FindElement(locator.ToBy());
     }
 
     /// <summary>
@@ -272,7 +310,7 @@ public class AnchorLocator
         if (_anchors.Count == 0)
             return result;
 
-        var firstAnchors = _driver.FindElements(_anchors[0].ToBy());
+        var firstAnchors = _driver!.FindElements(_anchors[0].ToBy());
         foreach (var first in firstAnchors)
         {
             var current = first;
@@ -300,7 +338,7 @@ public class AnchorLocator
     /// </summary>
     private IWebElement? FindRelative(IWebElement anchor, By targetBy, Direction[] structural)
     {
-        var candidates = _driver.FindElements(targetBy);
+        var candidates = _driver!.FindElements(targetBy);
         foreach (var direction in structural)
         {
             var matches = candidates
@@ -335,7 +373,7 @@ public class AnchorLocator
     /// Determines whether a candidate element satisfies the spatial/structural relationship
     /// described by <paramref name="direction"/> with respect to <paramref name="anchor"/>.
     /// Unlike the previous XPath-string approach, the target locator is always applied first
-    /// (in <see cref="Resolve"/>), so the candidate is guaranteed to match the target selector.
+    /// (in <see cref="Resolve()"/>), so the candidate is guaranteed to match the target selector.
     /// </summary>
     private static bool IsInDirection(IWebDriver driver, IWebElement anchor, IWebElement candidate, Direction direction)
     {
@@ -502,15 +540,17 @@ public class AnchorLocator
     /// </summary>
     private IWebElement SelectClosestElement(IWebElement anchor, IEnumerable<IWebElement> elements)
     {
-        if (!elements.Any())
+        var webElements = elements as IWebElement[] ?? [.. elements];
+
+        if (!webElements.Any())
             throw new InvalidOperationException("Elements collection is empty.");
 
-        var closest = elements
-            .Select(e => new { Element = e, Distance = AnchorLocatorHelper.CalculateDistance(_driver, anchor, e) })
+        var closest = webElements
+            .Select(e => new { Element = e, Distance = AnchorLocatorHelper.CalculateDistance(_driver!, anchor, e) })
             .OrderBy(x => x.Distance)
             .FirstOrDefault();
 
-        return closest?.Element ?? elements.First();
+        return closest?.Element ?? webElements.First();
     }
 
     /// <summary>
@@ -521,7 +561,7 @@ public class AnchorLocator
     {
         try
         {
-            var js = (IJavaScriptExecutor)_driver;
+            var js = (IJavaScriptExecutor)_driver!;
             var xpath = js.ExecuteScript(
                 "function getXPath(element) {" +
                 "  if (element.id !== '')" +
@@ -550,3 +590,4 @@ public class AnchorLocator
         }
     }
 }
+

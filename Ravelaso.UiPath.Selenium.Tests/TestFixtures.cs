@@ -1,3 +1,4 @@
+// ReSharper disable InconsistentNaming
 namespace Ravelaso.UiPath.Selenium.Tests;
 
 /// <summary>

@@ -2,8 +2,8 @@
   <PropertyGroup>
     <!-- Semantic Versioning -->
     <VersionMajor>0</VersionMajor>
-    <VersionMinor>1</VersionMinor>
-    <VersionPatch>2</VersionPatch>
+    <VersionMinor>2</VersionMinor>
+    <VersionPatch>0</VersionPatch>
     <VersionPrefix>$(VersionMajor).$(VersionMinor).$(VersionPatch)</VersionPrefix>
 
     <!-- NuGet Package Metadata -->
@@ -16,6 +16,6 @@
     <RepositoryUrl>https://github.com/ravelaso/UiPath.Selenium</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>selenium;uipath;webdriver;automation;net8;net10</PackageTags>
-    <PackageReleaseNotes>v0.1.2: Launch browser with debugger port, to interact with UiPath and the Library together.</PackageReleaseNotes>
+    <PackageReleaseNotes>v0.2.0: Refactor API; Anchor system not dependant on client, client code refactored.. Breaking changes: Anchors now created by Loc.Anchor() not through client.CreateAnchor()</PackageReleaseNotes>
   </PropertyGroup>
 </Project>

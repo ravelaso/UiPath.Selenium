@@ -1,3 +1,4 @@
+// ReSharper disable CheckNamespace
 namespace Ravelaso.UiPath.Selenium.Core;
 
 /// <summary>
@@ -7,6 +8,11 @@ namespace Ravelaso.UiPath.Selenium.Core;
 /// </summary>
 public static class Loc
 {
+    /// <summary>
+    /// Creates an anchor locator that does not depend on a client.
+    /// The driver is supplied when the anchor is resolved or passed to a client method.
+    /// </summary>
+    public static AnchorLocator Anchor(Locator anchor) => new AnchorLocator(anchor);
     /// <summary>Create a locator by id attribute.</summary>
     /// <example><c>Loc.Id("username")</c></example>
     public static Locator Id(string id) => new(Locator.PartKind.Id, id);

@@ -1,7 +1,7 @@
 using System.Diagnostics;
-using System.IO;
 using System.Net.Sockets;
 
+// ReSharper disable CheckNamespace
 namespace Ravelaso.UiPath.Selenium.Core;
 
 /// <summary>
@@ -22,7 +22,7 @@ public static class BrowserLauncher
         if (string.IsNullOrWhiteSpace(options.DebuggerAddress))
             options.DebuggerAddress = "localhost:9222";
 
-        var (host, port) = ParseAddress(options.DebuggerAddress);
+        var (_, port) = ParseAddress(options.DebuggerAddress);
 
         if (IsDebugPortOpen(options.DebuggerAddress))
             return null;

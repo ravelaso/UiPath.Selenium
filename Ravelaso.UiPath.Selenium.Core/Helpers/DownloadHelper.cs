@@ -1,12 +1,11 @@
 using System.Diagnostics;
-using System.IO;
 using System.Net;
-using System.Net.Http;
 using System.Text.RegularExpressions;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Edge;
 
+// ReSharper disable CheckNamespace
 namespace Ravelaso.UiPath.Selenium.Core;
 
 internal static class DownloadHelper
@@ -66,19 +65,15 @@ internal static class DownloadHelper
 
         var effectiveTimeout = timeout > TimeSpan.Zero ? timeout : TimeSpan.FromSeconds(60);
 
-        using var handler = new HttpClientHandler
-        {
-            UseCookies = true,
-            CookieContainer = new CookieContainer(),
-            AutomaticDecompression = System.Net.DecompressionMethods.All
-        };
+        using var handler = new HttpClientHandler();
+        handler.UseCookies = true;
+        handler.CookieContainer = new CookieContainer();
+        handler.AutomaticDecompression = DecompressionMethods.All;
 
         CopyCookies(driver, handler.CookieContainer);
 
-        using var http = new HttpClient(handler)
-        {
-            Timeout = effectiveTimeout
-        };
+        using var http = new HttpClient(handler);
+        http.Timeout = effectiveTimeout;
 
         var userAgent = GetUserAgent(driver);
         if (!string.IsNullOrWhiteSpace(userAgent))
@@ -176,14 +171,13 @@ internal static class DownloadHelper
         var stopwatch = Stopwatch.StartNew();
         long lastSize = -1;
         DateTime lastSizeChange = DateTime.UtcNow;
-        string? candidate = null;
 
         while (stopwatch.Elapsed < timeout)
         {
             var files = Directory.GetFiles(tempFolder);
             var completedCandidates = files
                 .Where(f => !IsTemporaryDownloadFile(f))
-                .Where(f => !beforeFiles.Contains(f, StringComparer.OrdinalIgnoreCase))
+                .Where(f => !beforeFiles.Contains(f))
                 .ToList();
 
             // If the folder was empty before the click, all completed files are new.
@@ -196,11 +190,11 @@ internal static class DownloadHelper
 
             if (completedCandidates.Count > 0)
             {
-                candidate = completedCandidates
+                var selectedFile = completedCandidates
                     .OrderByDescending(f => File.GetLastWriteTimeUtc(f))
                     .First();
 
-                var size = new FileInfo(candidate).Length;
+                var size = new FileInfo(selectedFile).Length;
                 if (size != lastSize)
                 {
                     lastSize = size;
@@ -208,14 +202,13 @@ internal static class DownloadHelper
                 }
                 else if (DateTime.UtcNow - lastSizeChange >= TimeSpan.FromMilliseconds(500))
                 {
-                    return candidate;
+                    return selectedFile;
                 }
             }
             else
             {
                 lastSize = -1;
                 lastSizeChange = DateTime.UtcNow;
-                candidate = null;
             }
 
             Thread.Sleep(250);

@@ -2,7 +2,7 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Edge;
 using OpenQA.Selenium.Firefox;
-
+// ReSharper disable CheckNamespace
 namespace Ravelaso.UiPath.Selenium.Core;
 
 /// <summary>
@@ -20,7 +20,7 @@ public static class BrowserDriverFactory
     public static IWebDriver Create(WebBrowser webBrowser, BrowserOptions? options = null)
     {
         options ??= new BrowserOptions();
-        
+
         IWebDriver driver = webBrowser switch
         {
             WebBrowser.Chrome => CreateChrome(options),
@@ -95,19 +95,19 @@ public static class BrowserDriverFactory
     private static IWebDriver CreateFirefox(BrowserOptions options)
     {
         var firefoxOptions = new FirefoxOptions();
-        
+
         if (options.Headless)
             firefoxOptions.AddArgument("-headless");
-        
+
         firefoxOptions.AddArgument($"-width={options.WindowWidth}");
         firefoxOptions.AddArgument($"-height={options.WindowHeight}");
-        
+
         if (!string.IsNullOrWhiteSpace(options.BinaryPath))
             firefoxOptions.BinaryLocation = options.BinaryPath;
-        
+
         foreach (var arg in options.ExtraArguments)
             firefoxOptions.AddArgument(arg);
-        
+
         return new FirefoxDriver(firefoxOptions);
     }
 
