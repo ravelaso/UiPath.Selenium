@@ -4,6 +4,35 @@ This guide shows the most common ways to use `Ravelaso.UiPath.Selenium` with the
 
 ## 1. Create a client
 
+### Launch a browser for UiPath attach
+
+Use `BrowserLauncher` to start Chrome or Edge with remote debugging enabled. Then create the normal client using the same `DebuggerAddress`.
+
+```csharp
+var options = new BrowserOptions
+{
+    WebBrowser = WebBrowser.Edge,
+    DebuggerAddress = "localhost:9222",
+    Maximize = true,
+    GlobalDelay = TimeSpan.FromSeconds(1),
+    ElementWaitTimeout = TimeSpan.FromSeconds(10)
+};
+
+var process = BrowserLauncher.Launch(options);
+
+using var client = new RavelasoWebClient(options);
+
+// UiPath can now attach to the same browser window.
+// Use UiPath activities for standard automation.
+// Use client for difficult steps such as anchors, downloads, zoom, or JavaScript-heavy interactions.
+```
+
+Notes:
+- If the debug port is already open, `BrowserLauncher.Launch` returns `null`.
+- In UiPath, use **Use Application/Browser** with **Attach to running application**.
+- The library and UiPath share the same browser session.
+- Keep the browser process alive while both tools are using it.
+
 ### Launch a new browser
 
 ```csharp
