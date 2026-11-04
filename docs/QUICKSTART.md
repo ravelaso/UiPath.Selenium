@@ -87,7 +87,7 @@ client.Click(Loc.Tag("a").Text("Sign in"));
 
 ```csharp
 // Wait up to 10 seconds for an element to appear
-bool loaded = client.WaitFor(Loc.Tag("h1").Text("Dashboard"), null, TimeSpan.FromSeconds(10));
+bool loaded = client.WaitFor(Loc.Tag("h1").Text("Dashboard"), TimeSpan.FromSeconds(10));
 
 if (!loaded)
     throw new TimeoutException("Dashboard did not load.");
@@ -132,7 +132,6 @@ client.DoubleClick(invoiceValue);
 bool appeared = client.WaitFor(
     Loc.Anchor(Loc.Tag("div").Class("notification-area"))
         .Find(Loc.Tag("a").Class("download-link").Text("Open download center")),
-    null,
     TimeSpan.FromMinutes(2));
 
 if (!appeared)
