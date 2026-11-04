@@ -1,7 +1,7 @@
 using System.Diagnostics;
-using System.IO;
 using System.Net.Sockets;
 
+// ReSharper disable CheckNamespace
 namespace Ravelaso.UiPath.Selenium.Core;
 
 /// <summary>
