@@ -91,6 +91,36 @@ using var client = new RavelasoWebClient(WebBrowser.Edge, options);
 
 ---
 
+## Launching a browser for UiPath attach
+
+Use `BrowserLauncher` to start a Chromium-based browser with remote debugging enabled. Then create the normal client using the same `DebuggerAddress`.
+
+```csharp
+var options = new BrowserOptions
+{
+    WebBrowser = WebBrowser.Edge,
+    DebuggerAddress = "localhost:9222",
+    Maximize = true,
+    GlobalDelay = TimeSpan.FromSeconds(1),
+    ElementWaitTimeout = TimeSpan.FromSeconds(10)
+};
+
+var process = BrowserLauncher.Launch(options);
+
+using var client = new RavelasoWebClient(options);
+
+// UiPath can now attach to the same browser window.
+// Use UiPath activities for standard automation.
+// Use client for difficult steps such as anchors, downloads, zoom, or JavaScript-heavy interactions.
+```
+
+Notes:
+- If the debug port is already open, `BrowserLauncher.Launch` returns `null`.
+- In UiPath, use **Use Application/Browser** with **Attach to running application**.
+- The library and UiPath share the same browser session.
+
+---
+
 ## Main API
 
 ### Navigation and page state
@@ -235,33 +265,9 @@ var options = new BrowserOptions
 var client = new RavelasoWebClient(WebBrowser.Edge, options);
 ```
 
-Supported browsers: Chrome, Edge, Firefox
+Supported browsers: Chrome, Edge (Firefox, limited support)
 
 ---
-
-## Deployment & Packaging
-
-### Release Build (Automated)
-
-```bash
-dotnet build -c Release
-# Output: dist/Ravelaso.UiPath.Selenium.1.0.2.nupkg
-```
-
-- Generates `.nupkg` automatically
-- Version: `1.0.2` (from `Version.props`)
-- Includes: `selenium-manager.exe`, all dependencies
-- Ready for distribution
-
-### Debug Build (Manual)
-
-```bash
-dotnet build -c Debug
-dotnet pack -c Debug
-```
-
-- Requires manual `dotnet pack`
-- For local testing only
 
 ### Version Management
 
@@ -275,36 +281,14 @@ Edit `Version.props` to bump version:
 
 Then rebuild: `dotnet build -c Release`
 
-### Installation Methods
-
-**Method 1: NuGet Package (Recommended)**
-```bash
-dotnet add package Ravelaso.UiPath.Selenium
-```
-
-**Method 2: Local File**
-Extract `.nupkg` and copy DLLs manually to your project Libraries folder.
-
-**Method 3: UiPath Studio**
-- Settings → NuGet Packages → Add Source
-- Point to folder containing `.nupkg`
-- Install from Studio UI
-
 ---
 
 ### Debugging Attach
 
+Use this to launch an Edge browser with remote debug enabled.
 ```bash
 & "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --remote-debugging-port=9222 --user-data-dir="C:\Temp\EdgeDebug"
 ```
-
-## Publishing
-
-Releases are published through GitHub Actions.
-
-- [Run or view the publish workflow](https://github.com/ravelaso/UiPath.Selenium/actions/workflows/publish-nuget-package.yml)
-- The workflow runs automatically when a pull request is merged into `main`.
-- It can also be triggered manually with `workflow_dispatch`.
 
 ## License
 
