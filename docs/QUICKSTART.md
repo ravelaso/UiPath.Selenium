@@ -93,10 +93,10 @@ if (!loaded)
     throw new TimeoutException("Dashboard did not load.");
 
 // Immediate existence check
-bool hasError = client.Exists(Loc.Id("error-panel"), TimeSpan.Zero);
+bool hasError = client.Exists(Loc.Id("error-panel"), null, TimeSpan.Zero);
 
 // Check visibility
-bool isVisible = client.IsDisplayed(Loc.Id("submit-button"), TimeSpan.FromSeconds(5));
+bool isVisible = client.IsDisplayed(Loc.Id("submit-button"), null, TimeSpan.FromSeconds(5));
 ```
 
 ## 4. Anchors
@@ -214,6 +214,7 @@ var downloadButton = Loc.Anchor(Loc.Text("Account 12345"))
 string savedPath = client.DownloadFile(
     downloadButton,
     @"C:\Automation\report.xlsx",
+    null,
     TimeSpan.FromMinutes(2));
 
 Console.WriteLine($"Downloaded: {savedPath}");

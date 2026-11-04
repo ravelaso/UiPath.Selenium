@@ -1,23 +1,23 @@
 using OpenQA.Selenium;
 using System.Diagnostics;
-using System.Threading;
 
+// ReSharper disable CheckNamespace
 namespace Ravelaso.UiPath.Selenium.Core;
 
 /// <summary>
 /// Represents an anchor-based element locator that finds target elements relative to a reference (anchor) element.
 /// Implements a fluent API for building anchor searches with optional direction constraints.
-/// 
+///
 /// The anchor system automatically searches all directions (Right, Left, Below, Above, SameRow, SameContainer, Innermost, Anywhere)
 /// and returns the first match found. If a specific search order is needed, use SearchOrder() or ExactDirection().
-/// 
+///
 /// Example:
 /// <code>
 /// // Find download button in the row with date "2026-10-22"
 /// var downloadBtn = Loc.Anchor(client._driver)
 ///     .Find(Loc.Css("button.download"))
 ///     .Resolve();
-/// 
+///
 /// client.Click(downloadBtn);
 /// </code>
 /// </summary>
@@ -540,15 +540,17 @@ public class AnchorLocator
     /// </summary>
     private IWebElement SelectClosestElement(IWebElement anchor, IEnumerable<IWebElement> elements)
     {
-        if (!elements.Any())
+        var webElements = elements as IWebElement[] ?? [.. elements];
+
+        if (!webElements.Any())
             throw new InvalidOperationException("Elements collection is empty.");
 
-        var closest = elements
+        var closest = webElements
             .Select(e => new { Element = e, Distance = AnchorLocatorHelper.CalculateDistance(_driver!, anchor, e) })
             .OrderBy(x => x.Distance)
             .FirstOrDefault();
 
-        return closest?.Element ?? elements.First();
+        return closest?.Element ?? webElements.First();
     }
 
     /// <summary>

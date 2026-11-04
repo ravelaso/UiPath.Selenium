@@ -66,7 +66,7 @@ client.Type(Loc.Id("search"), "my search");
 client.Click(Loc.Css("button.search-btn"));
 
 // Wait and get result
-if (client.WaitFor(Loc.Id("results"), TimeSpan.FromSeconds(10)))
+if (client.WaitFor(Loc.Id("results"), null, TimeSpan.FromSeconds(10)))
 {
     var result = client.GetText(Loc.Id("results"));
     Console.WriteLine(result);
@@ -168,7 +168,7 @@ Notes:
 
 ### Downloads
 
-- `DownloadFile(downloadButton, destinationPath, timeout)` — Download file to final path
+- `DownloadFile(downloadButton, destinationPath, beforeStepDelay, timeout)` — Download file to final path
 - `DownloadFromUrl(url, destinationPath, timeout)` — Download from direct URL
 - `TryGetDownloadUrl(locator)` — Extract a download URL from an element
 
@@ -238,6 +238,7 @@ var downloadButton = Loc.Anchor(Loc.Text("Account 12345"))
 string savedPath = client.DownloadFile(
     downloadButton,
     @"C:\Automation\report.xlsx",
+    null,
     TimeSpan.FromMinutes(2));
 ```
 

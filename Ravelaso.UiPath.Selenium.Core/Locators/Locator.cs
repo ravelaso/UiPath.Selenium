@@ -1,5 +1,6 @@
 using System.Text;
 using OpenQA.Selenium;
+// ReSharper disable CheckNamespace
 
 namespace Ravelaso.UiPath.Selenium.Core;
 
@@ -125,7 +126,7 @@ public sealed class Locator
     private static By BuildCss(List<Part> parts)
     {
         var cssParts = parts.Where(p => p.Kind == PartKind.Css).ToList();
-        
+
         // Validate CSS fragments without combinators
         foreach (var css in cssParts)
         {
@@ -295,13 +296,13 @@ public sealed class Locator
     /// Creates an anchor point for relative element searching.
     /// The anchor system finds target elements relative to a reference (anchor) element,
     /// useful for dynamic tables, forms, and lists where positions change.
-    /// 
+    ///
     /// Example:
     /// <code>
     /// var downloadBtn = Loc.Anchor(Loc.Text("2026-10-22"))
     ///     .Find(Loc.Css("button.download"))
     ///     .Resolve();
-    /// 
+    ///
     /// client.Click(downloadBtn);
     /// </code>
     /// </summary>
