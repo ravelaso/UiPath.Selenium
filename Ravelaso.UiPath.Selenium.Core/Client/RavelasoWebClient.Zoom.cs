@@ -9,19 +9,21 @@ public partial class RavelasoWebClient
     /// Sets the browser zoom using a decimal value, where 1.0 is 100%.
     /// </summary>
     /// <param name="percent">Zoom value, for example 0.8 for 80%.</param>
-    public void SetZoom(double percent)
+    public void SetZoom(double percent, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
-        BeforeStep();
+        BeforeStep(beforeStepDelay);
         ApplyZoom(percent);
+        Thread.Sleep(timeout ?? TimeSpan.FromSeconds(3));
     }
 
     /// <summary>
     /// Resets the browser zoom to 100%.
     /// </summary>
-    public void ResetZoom()
+    public void ResetZoom(TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
-        BeforeStep();
+        BeforeStep(beforeStepDelay);
         ApplyZoom(1.0);
+        Thread.Sleep(timeout ?? TimeSpan.FromSeconds(3));
     }
 
     private void ApplyZoom(double percent)
