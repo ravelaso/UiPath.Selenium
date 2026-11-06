@@ -177,11 +177,13 @@ Notes:
 ### Page helpers
 
 - `Screenshot(path)` — Take screenshot and return path
-- `SetZoom(percent)` — Set browser zoom, where `1.0` is 100%
-- `ResetZoom()` — Reset browser zoom to 100%
-- `Scroll(direction, amount)` — Scroll by pixels (wheel, CDP on Chromium)
-- `ScrollTo(direction, locator)` — Scroll until the element is found
-- `ScrollTo(direction, anchor)` — Scroll until an anchored element is found
+- `SetZoom(percent, beforeStepDelay, timeout)` — Set browser zoom, where `1.0` is 100%. Applies a default 3 s delay after zooming to let the page re-layout.
+- `ResetZoom(beforeStepDelay, timeout)` — Reset browser zoom to 100%. Applies the same default delay.
+- `Scroll(direction, amount)` — Scroll by pixels (auto-detects the best scrollable container)
+- `Scroll(direction, amount, container)` — Scroll a specific container
+- `ScrollTo(direction, target)` — Scroll until the element is visible (throws `NoSuchElementException` on timeout)
+- `ScrollTo(direction, target, container)` — Scroll until visible inside a specific container
+- `GetScrollables()` — List scrollable containers for inspection
 
 ---
 
@@ -253,21 +255,27 @@ The library first tries a direct HTTP download using browser cookies. If no URL 
 
 ## Scrolling
 
-Scroll by pixels or until a target appears. Uses wheel events (CDP on Chromium, then Selenium Actions, then JavaScript), which works on nested scroll containers such as tables.
+Scroll by pixels or until a target becomes visible. Auto-detects the best scrollable container for the direction (prefers the content viewport over scrollbar tracks); falls back to the page scroller when none is found. Uses wheel events (CDP on Chromium, then Selenium Actions, then JavaScript).
 
 ```csharp
 using Ravelaso.UiPath.Selenium.Core;
 
-// Scroll by pixels
+// Scroll by pixels (auto-detect container)
 client.Scroll(ScrollDirection.Down, 500);
 client.Scroll(ScrollDirection.Right, 300);
 
-// Scroll until an element is found
+// Scroll a specific container
+client.Scroll(ScrollDirection.Right, 600, Loc.Css("div.table-wrapper"));
+
+// Scroll until an element is visible (throws NoSuchElementException on timeout)
 client.ScrollTo(ScrollDirection.Down, Loc.Id("targetRow"), timeout: TimeSpan.FromSeconds(10));
 
-// Scroll until an anchored element resolves
-client.ScrollTo(ScrollDirection.Down,
-    Loc.Anchor(Loc.Text("Account 123")).Find(Loc.Css("button.download")));
+// Scroll until an element is visible inside a specific container
+client.ScrollTo(ScrollDirection.Down, Loc.Id("targetRow"), Loc.Css("div.table-wrapper"));
+
+// Inspect scrollable containers
+foreach (var s in client.GetScrollables())
+    Console.WriteLine($"{s.Index}: {s.Tag} {s.ClassName} {s.ClientWidth}x{s.ClientHeight} scroll {s.ScrollWidth}x{s.ScrollHeight}");
 ```
 
 ---

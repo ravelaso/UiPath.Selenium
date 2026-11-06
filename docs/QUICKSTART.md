@@ -201,9 +201,49 @@ client.SetZoom(0.8);
 client.ResetZoom();
 ```
 
-Zoom can help anchors and tables that load content based on the visible viewport.
+`SetZoom` and `ResetZoom` apply a short delay by default so the page can re-layout before the next action.
 
-## 9. Downloads
+## 9. Scrolling
+
+```csharp
+using Ravelaso.UiPath.Selenium.Core;
+
+// Scroll by pixels (auto-detects the best scrollable container)
+client.Scroll(ScrollDirection.Down, 500);
+client.Scroll(ScrollDirection.Right, 300);
+
+// Scroll a specific container
+client.Scroll(ScrollDirection.Right, 600, Loc.Css("div.table-wrapper"));
+
+// Scroll until an element is visible (throws NoSuchElementException on timeout)
+client.ScrollTo(ScrollDirection.Down, Loc.Id("targetRow"), timeout: TimeSpan.FromSeconds(10));
+
+// Inspect scrollable containers
+foreach (var s in client.GetScrollables())
+    Console.WriteLine($"{s.Index}: {s.Tag} {s.ClassName} {s.ClientWidth}x{s.ClientHeight}");
+```
+
+## 10. Extracting tables
+
+```csharp
+var options = new TableExtractionOptions()
+    .WithHasHeader(false)
+    .Column("Date", typeof(DateTime))
+    .Column("Camera", typeof(string))
+    .Column("Starting", typeof(int))
+    .Column("Ending", typeof(int))
+    .Column("Batch", typeof(int));
+
+var data = client.ExtractTable(Loc.XPath("/html/body/table[2]"), options);
+
+for (int i = 3; i <= 10; i++)
+    client.ExtractTable(Loc.XPath($"/html/body/table[{i}]"), data, options);
+
+Console.WriteLine($"Total rows: {data.Rows.Count}");
+```
+
+Tables can also be appended into a pre-built `DataTable` (e.g. from UiPath "Build Data Table").
+## 11. Downloads
 
 `DownloadFile` downloads a file triggered by an element and saves it to the final destination path.
 
@@ -230,14 +270,14 @@ client.DownloadFromUrl(
 
 The library first tries a direct HTTP download using browser cookies. If no URL is available, it uses a runtime Chromium/Edge download fallback.
 
-## 10. Screenshots
+## 12. Screenshots
 
 ```csharp
 string screenshotPath = client.Screenshot(@"C:\Automation\screenshot.png");
 Console.WriteLine(screenshotPath);
 ```
 
-## 11. Shadow DOM
+## 13. Shadow DOM
 
 The client automatically searches light DOM and open Shadow DOM roots for supported operations.
 
@@ -245,7 +285,7 @@ The client automatically searches light DOM and open Shadow DOM roots for suppor
 client.Click(Loc.Tag("button").Attr("data-testid", "shadow-submit"));
 ```
 
-## 12. Best practices
+## 14. Best practices
 
 - Prefer `Loc.Text(...)` or chained `Loc` conditions over fragile XPath.
 - Use anchors for dynamic tables instead of row indexes.
@@ -255,7 +295,7 @@ client.Click(Loc.Tag("button").Attr("data-testid", "shadow-submit"));
 - Keep download destinations explicit and outside browser profile folders.
 - Use `ClickJs` or `ClickHidden` only when normal clicks are intercepted.
 
-## 13. Common troubleshooting
+## 15. Common troubleshooting
 
 ### Anchor throws `NoSuchElementException`
 - Check that the anchor text exactly matches the rendered text.
