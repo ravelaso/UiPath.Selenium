@@ -19,6 +19,8 @@ Automate web browser interactions from UiPath or .NET:
 - Download files
 - Take screenshots
 - Zoom pages for wide tables
+- Scroll pages and tables (wheel/CDP)
+- Extract HTML tables to DataTable
 - Work with Shadow DOM
 
 ---
@@ -177,6 +179,9 @@ Notes:
 - `Screenshot(path)` — Take screenshot and return path
 - `SetZoom(percent)` — Set browser zoom, where `1.0` is 100%
 - `ResetZoom()` — Reset browser zoom to 100%
+- `Scroll(direction, amount)` — Scroll by pixels (wheel, CDP on Chromium)
+- `ScrollTo(direction, locator)` — Scroll until the element is found
+- `ScrollTo(direction, anchor)` — Scroll until an anchored element is found
 
 ---
 
@@ -245,6 +250,70 @@ string savedPath = client.DownloadFile(
 The library first tries a direct HTTP download using browser cookies. If no URL is available, it uses a runtime Chromium/Edge download fallback and moves the completed file to the requested destination.
 
 ---
+
+## Scrolling
+
+Scroll by pixels or until a target appears. Uses wheel events (CDP on Chromium, then Selenium Actions, then JavaScript), which works on nested scroll containers such as tables.
+
+```csharp
+using Ravelaso.UiPath.Selenium.Core;
+
+// Scroll by pixels
+client.Scroll(ScrollDirection.Down, 500);
+client.Scroll(ScrollDirection.Right, 300);
+
+// Scroll until an element is found
+client.ScrollTo(ScrollDirection.Down, Loc.Id("targetRow"), timeout: TimeSpan.FromSeconds(10));
+
+// Scroll until an anchored element resolves
+client.ScrollTo(ScrollDirection.Down,
+    Loc.Anchor(Loc.Text("Account 123")).Find(Loc.Css("button.download")));
+```
+
+---
+
+## Tables
+
+Extract an HTML table into a `System.Data.DataTable`. Handles `thead`/`tbody`/`tfoot`, nested tags (`<font>`, `<a>`, …), empty cells, and typed columns.
+
+```csharp
+// No header row in the table; define columns explicitly
+var leicaOptions = new TableExtractionOptions()
+    .WithHasHeader(false)
+    .Column("Date", typeof(DateTime))
+    .Column("Camera", typeof(string))
+    .Column("Starting", typeof(int))
+    .Column("Ending", typeof(int))
+    .Column("Batch", typeof(int));
+
+var leicaData = client.ExtractTable(Loc.XPath("/html/body/table[2]"), leicaOptions);
+
+for (int i = 3; i <= 10; i++)
+    client.ExtractTable(Loc.XPath($"/html/body/table[{i}]"), leicaData, leicaOptions);
+
+Console.WriteLine($"Total rows: {leicaData.Rows.Count}");
+```
+
+Header-based extraction:
+
+```csharp
+var table = client.ExtractTable(Loc.Css("table.mdctable"),
+    new TableExtractionOptions().WithHasHeader(true));
+```
+
+Append into a pre-built `DataTable` (e.g. UiPath "Build Data Table"):
+
+```csharp
+var myTable = new DataTable();
+myTable.Columns.Add("Date", typeof(DateTime));
+myTable.Columns.Add("Camera", typeof(string));
+
+client.ExtractTable(Loc.Css("table"), myTable,
+    new TableExtractionOptions { HasHeader = false });
+```
+
+---
+
 
 ## Configuration
 
