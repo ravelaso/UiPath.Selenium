@@ -19,6 +19,8 @@ Automate web browser interactions from UiPath or .NET:
 - Download files
 - Take screenshots
 - Zoom pages for wide tables
+- Scroll pages and tables (wheel/CDP)
+- Extract HTML tables to DataTable
 - Work with Shadow DOM
 
 ---
@@ -175,8 +177,13 @@ Notes:
 ### Page helpers
 
 - `Screenshot(path)` — Take screenshot and return path
-- `SetZoom(percent)` — Set browser zoom, where `1.0` is 100%
-- `ResetZoom()` — Reset browser zoom to 100%
+- `SetZoom(percent, beforeStepDelay, timeout)` — Set browser zoom, where `1.0` is 100%. Applies a default 3 s delay after zooming to let the page re-layout.
+- `ResetZoom(beforeStepDelay, timeout)` — Reset browser zoom to 100%. Applies the same default delay.
+- `Scroll(direction, amount)` — Scroll by pixels (auto-detects the best scrollable container)
+- `Scroll(direction, amount, container)` — Scroll a specific container
+- `ScrollTo(direction, target)` — Scroll until the element is visible (throws `NoSuchElementException` on timeout)
+- `ScrollTo(direction, target, container)` — Scroll until visible inside a specific container
+- `GetScrollables()` — List scrollable containers for inspection
 
 ---
 
@@ -245,6 +252,76 @@ string savedPath = client.DownloadFile(
 The library first tries a direct HTTP download using browser cookies. If no URL is available, it uses a runtime Chromium/Edge download fallback and moves the completed file to the requested destination.
 
 ---
+
+## Scrolling
+
+Scroll by pixels or until a target becomes visible. Auto-detects the best scrollable container for the direction (prefers the content viewport over scrollbar tracks); falls back to the page scroller when none is found. Uses wheel events (CDP on Chromium, then Selenium Actions, then JavaScript).
+
+```csharp
+using Ravelaso.UiPath.Selenium.Core;
+
+// Scroll by pixels (auto-detect container)
+client.Scroll(ScrollDirection.Down, 500);
+client.Scroll(ScrollDirection.Right, 300);
+
+// Scroll a specific container
+client.Scroll(ScrollDirection.Right, 600, Loc.Css("div.table-wrapper"));
+
+// Scroll until an element is visible (throws NoSuchElementException on timeout)
+client.ScrollTo(ScrollDirection.Down, Loc.Id("targetRow"), timeout: TimeSpan.FromSeconds(10));
+
+// Scroll until an element is visible inside a specific container
+client.ScrollTo(ScrollDirection.Down, Loc.Id("targetRow"), Loc.Css("div.table-wrapper"));
+
+// Inspect scrollable containers
+foreach (var s in client.GetScrollables())
+    Console.WriteLine($"{s.Index}: {s.Tag} {s.ClassName} {s.ClientWidth}x{s.ClientHeight} scroll {s.ScrollWidth}x{s.ScrollHeight}");
+```
+
+---
+
+## Tables
+
+Extract an HTML table into a `System.Data.DataTable`. Handles `thead`/`tbody`/`tfoot`, nested tags (`<font>`, `<a>`, …), empty cells, and typed columns.
+
+```csharp
+// No header row in the table; define columns explicitly
+var leicaOptions = new TableExtractionOptions()
+    .WithHasHeader(false)
+    .Column("Date", typeof(DateTime))
+    .Column("Camera", typeof(string))
+    .Column("Starting", typeof(int))
+    .Column("Ending", typeof(int))
+    .Column("Batch", typeof(int));
+
+var leicaData = client.ExtractTable(Loc.XPath("/html/body/table[2]"), leicaOptions);
+
+for (int i = 3; i <= 10; i++)
+    client.ExtractTable(Loc.XPath($"/html/body/table[{i}]"), leicaData, leicaOptions);
+
+Console.WriteLine($"Total rows: {leicaData.Rows.Count}");
+```
+
+Header-based extraction:
+
+```csharp
+var table = client.ExtractTable(Loc.Css("table.mdctable"),
+    new TableExtractionOptions().WithHasHeader(true));
+```
+
+Append into a pre-built `DataTable` (e.g. UiPath "Build Data Table"):
+
+```csharp
+var myTable = new DataTable();
+myTable.Columns.Add("Date", typeof(DateTime));
+myTable.Columns.Add("Camera", typeof(string));
+
+client.ExtractTable(Loc.Css("table"), myTable,
+    new TableExtractionOptions { HasHeader = false });
+```
+
+---
+
 
 ## Configuration
 
