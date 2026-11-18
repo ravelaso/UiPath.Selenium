@@ -40,32 +40,32 @@
         </ProjectReference>
     </ItemGroup>
 
-    <!-- Pack dependencies (transitive) + runtimes -->
+    <!-- Dynamically collect all managed build output and dependencies into lib/{tfm} -->
     <PropertyGroup>
-        <TargetsForTfmSpecificBuildOutput>
-            $(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage
-        </TargetsForTfmSpecificBuildOutput>
+        <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);IncludeAllLocalDependenciesInPackage</TargetsForTfmSpecificBuildOutput>
     </PropertyGroup>
 
-    <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="ResolveReferences">
+    <Target Name="IncludeAllLocalDependenciesInPackage" DependsOnTargets="ResolveReferences">
         <ItemGroup>
-            <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths)" />
+            <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths)" Condition="'%(Extension)' == '.dll' or '%(Extension)' == '.xml'" />
         </ItemGroup>
     </Target>
 
-    <!-- Copy runtimes folder for packing (post-build) -->
-    <Target Name="CopyRuntimesToPackage" AfterTargets="Build">
-        <ItemGroup>
-            <RuntimeAssets Include="$(OutputPath)runtimes\**\*" />
-        </ItemGroup>
-        <Message Text="Copying runtime assets from: $(OutputPath)runtimes\" Importance="high" />
-        <Copy SourceFiles="@(RuntimeAssets)" DestinationFiles="@(RuntimeAssets->'$(OutputPath)runtimes\%(RecursiveDir)%(Filename)%(Extension)')" />
-    </Target>
+    <!-- Dynamically collect runtime native assets (e.g. selenium-manager.exe) during packing -->
+    <PropertyGroup>
+        <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);IncludeRuntimeAssetsInPackage</TargetsForTfmSpecificContentInPackage>
+    </PropertyGroup>
 
-    <!-- Include in pack -->
-    <ItemGroup>
-        <None Include="$(OutputPath)runtimes\**\*" Pack="true" PackagePath="runtimes\%(RecursiveDir)" />
-    </ItemGroup>
+    <Target Name="IncludeRuntimeAssetsInPackage" Condition="'$(TargetFramework)' == 'net8.0'">
+        <ItemGroup>
+            <TfmSpecificPackageFile Include="$(TargetDir)runtimes\**\*" Condition="Exists('$(TargetDir)runtimes')">
+                <PackagePath>runtimes/%(RecursiveDir)%(Filename)%(Extension)</PackagePath>
+            </TfmSpecificPackageFile>
+            <TfmSpecificPackageFile Include="$(TargetDir)selenium-manager.exe" Condition="Exists('$(TargetDir)selenium-manager.exe')">
+                <PackagePath>runtimes/win/native/selenium-manager.exe</PackagePath>
+            </TfmSpecificPackageFile>
+        </ItemGroup>
+    </Target>
 
     <!-- Include Documentation in Package -->
     <ItemGroup>
