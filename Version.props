@@ -3,7 +3,7 @@
     <!-- Semantic Versioning -->
     <VersionMajor>0</VersionMajor>
     <VersionMinor>2</VersionMinor>
-    <VersionPatch>2</VersionPatch>
+    <VersionPatch>3</VersionPatch>
     <VersionPrefix>$(VersionMajor).$(VersionMinor).$(VersionPatch)</VersionPrefix>
 
     <!-- NuGet Package Metadata -->
@@ -16,6 +16,6 @@
     <RepositoryUrl>https://github.com/ravelaso/UiPath.Selenium</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>selenium;uipath;webdriver;automation;net8;net10</PackageTags>
-    <PackageReleaseNotes>v0.2.2: Updated selenium driver</PackageReleaseNotes>
+    <PackageReleaseNotes>v0.2.3:(Fix) Updated selenium driver</PackageReleaseNotes>
   </PropertyGroup>
 </Project>
