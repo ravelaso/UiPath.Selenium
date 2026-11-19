@@ -19,6 +19,8 @@ public static class BrowserDriverFactory
     /// <exception cref="ArgumentOutOfRangeException">If <paramref name="webBrowser"/> is not a valid value.</exception>
     public static IWebDriver Create(WebBrowser webBrowser, BrowserOptions? options = null)
     {
+        SeleniumManagerResolver.EnsureResolved();
+
         options ??= new BrowserOptions();
 
         IWebDriver driver = webBrowser switch
