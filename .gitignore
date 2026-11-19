@@ -4,7 +4,7 @@ obj/
 riderModule.iml
 /_ReSharper.Caches/
 *.user
-
+.atl/
 # IDE — JetBrains Rider workspace files (machine-specific)
 .idea/
 
