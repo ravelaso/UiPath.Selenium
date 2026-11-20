@@ -21,14 +21,14 @@ public static class DiscoveryTools
         try { by = BuildBy(strategy, value, attributeName); }
         catch (Exception ex) { return $"Error building locator: {ex.Message}"; }
 
-        IReadOnlyCollection<IWebElement> elements;
-        try { elements = driver.FindElements(by); }
+        List<IWebElement> elements;
+        try { elements = McpHelpers.FindElementsDeep(driver, by); }
         catch (Exception ex) { return $"Find failed: {ex.Message}"; }
 
         var list = new List<Dictionary<string, object?>>();
         foreach (var el in elements.Take(Math.Max(1, limit)))
         {
-            try { list.Add(McpHelpers.DescribeElement(el)); } catch { /* skip stale */ }
+            try { list.Add(McpHelpers.DescribeElement(driver, el)); } catch { /* skip stale */ }
         }
 
         return McpHelpers.ToJson(new { strategy, value, count = elements.Count, returned = list.Count, elements = list });
@@ -48,8 +48,10 @@ public static class DiscoveryTools
 
         try
         {
-            var el = driver.FindElement(by);
-            var info = McpHelpers.DescribeElement(el);
+            var els = McpHelpers.FindElementsDeep(driver, by);
+            if (els.Count == 0) throw new NoSuchElementException();
+            var el = els[0];
+            var info = McpHelpers.DescribeElement(driver, el);
             // Add outerHTML snippet
             try
             {
@@ -73,8 +75,8 @@ public static class DiscoveryTools
     public static string BrowserListInputs(BrowserSession session)
     {
         var driver = session.Client.Driver;
-        var els = driver.FindElements(By.CssSelector("input, textarea, select"));
-        var list = els.Select(McpHelpers.DescribeElement).ToList();
+        var els = McpHelpers.FindElementsDeep(driver, By.CssSelector("input, textarea, select"));
+        var list = els.Select(el => McpHelpers.DescribeElement(driver, el)).ToList();
         return McpHelpers.ToJson(new { count = els.Count, elements = list });
     }
 
@@ -82,9 +84,59 @@ public static class DiscoveryTools
     public static string BrowserListButtons(BrowserSession session)
     {
         var driver = session.Client.Driver;
-        var els = driver.FindElements(By.CssSelector("button, input[type='submit'], input[type='button'], a[role='button']"));
-        var list = els.Select(McpHelpers.DescribeElement).ToList();
+        var els = McpHelpers.FindElementsDeep(driver, By.CssSelector("button, input[type='submit'], input[type='button'], a[role='button']"));
+        var list = els.Select(el => McpHelpers.DescribeElement(driver, el)).ToList();
         return McpHelpers.ToJson(new { count = els.Count, elements = list });
+    }
+
+    [McpServerTool, Description("List all interactive/clickable elements (links, buttons, menuitems, and elements with data-t-id, ng-click, ui-sref, role, tabindex). Use this to discover navigation menus and clickable UI in SPAs where plain link/button lists are empty.")]
+    public static string BrowserListInteractive(BrowserSession session,
+        [Description("Max number of elements to return.")] int limit = 60)
+    {
+        var driver = session.Client.Driver;
+        try
+        {
+            var els = McpHelpers.FindElementsDeep(driver, By.CssSelector(
+                "a, button, [role], [data-t-id], [data-tid], [ng-click], [ui-sref], [tabindex]"));
+            var list = new List<Dictionary<string, object?>>();
+            foreach (var el in els)
+            {
+                try
+                {
+                    if (list.Count >= limit) break;
+                    list.Add(McpHelpers.DescribeElement(driver, el));
+                }
+                catch { /* skip stale */ }
+            }
+            return McpHelpers.ToJson(new { count = els.Count, returned = list.Count, elements = list });
+        }
+        catch (Exception ex)
+        {
+            return $"Error: {ex.Message}";
+        }
+    }
+
+    [McpServerTool, Description("Wait until visible text appears on the page (useful for SPA render timing). Returns true if found within timeout.")]
+    public static string BrowserWaitForText(BrowserSession session,
+        [Description("Text to wait for (substring).")] string text,
+        [Description("Timeout in seconds.")] int timeoutSeconds = 10)
+    {
+        var driver = session.Client.Driver;
+        var by = By.XPath($"//*[not(self::script or self::style or self::noscript or self::template)][contains(normalize-space(text()), '{text.Replace("'", "\\'")}')]");
+
+        var end = DateTime.UtcNow.AddSeconds(timeoutSeconds);
+        while (DateTime.UtcNow < end)
+        {
+            try
+            {
+                var els = driver.FindElements(by);
+                if (els.Count > 0)
+                    return McpHelpers.ToJson(new { found = true, count = els.Count });
+            }
+            catch { }
+            try { System.Threading.Thread.Sleep(250); } catch { }
+        }
+        return McpHelpers.ToJson(new { found = false, count = 0 });
     }
 
     [McpServerTool, Description("Check whether an element exists. strategy+value locate it; returns true/false (no throw).")]
@@ -100,7 +152,7 @@ public static class DiscoveryTools
         catch (Exception ex) { return $"Error: {ex.Message}"; }
         try
         {
-            var els = driver.FindElements(by);
+            var els = McpHelpers.FindElementsDeep(driver, by);
             return McpHelpers.ToJson(new { exists = els.Count > 0, count = els.Count });
         }
         catch (Exception ex) { return $"Error: {ex.Message}"; }
@@ -115,7 +167,7 @@ public static class DiscoveryTools
             "css" => By.CssSelector(value),
             "xpath" => By.XPath(value),
             "tag" => By.TagName(value),
-            "text" => By.XPath($"//*[contains(normalize-space(text()), {Quote(value)})]"),
+            "text" => By.XPath($"//*[not(self::script or self::style or self::noscript or self::template)][contains(normalize-space(text()), {Quote(value)})]"),
             "class" => By.ClassName(value),
             "attr" => string.IsNullOrWhiteSpace(attributeName)
                 ? throw new ArgumentException("attributeName required for attr strategy")

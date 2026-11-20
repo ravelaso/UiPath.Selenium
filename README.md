@@ -6,9 +6,6 @@ Selenium WebDriver wrapper for .NET that simplifies web automation in UiPath Stu
 
 THIS IS WORK IN PROGRESS! Please do not take it seriously for now until a stable release is ready. API may change!
 
-
-
-
 ---
 
 ## What is it?
@@ -377,6 +374,22 @@ https://developer.mozilla.org/en-US/docs/Web/WebDriver/Reference/BiDi/Modules/br
 
 session subscribe: https://developer.mozilla.org/en-US/docs/Web/WebDriver/Reference/BiDi/Modules/session/subscribe
 
+
+
+
+TESTING MCP
+
+https://the-internet.herokuapp.com/login
+
+```
+     "ravelaso-selenium": {
+      "type": "local",
+      "command": [
+        "C:\\Data\\Dev\\Ravelaso.UiPath.Selenium\\Ravelaso.UiPath.Selenium.Mcp\\bin\\Debug\\net10.0\\Ravelaso.UiPath.Selenium.Mcp.exe"
+      ],
+      "enabled": true
+    },
+```
 
 ## License
 
