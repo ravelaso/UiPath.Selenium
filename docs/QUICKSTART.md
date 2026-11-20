@@ -2,6 +2,19 @@
 
 This guide shows the most common ways to use `Ravelaso.UiPath.Selenium` with the current API. All examples use generic values so they can be adapted to your own application.
 
+
+## Some Tips
+
+
+[Using AI Agents](https://www.selenium.dev/documentation/ai_agents/)
+
+[Finding Elements](https://www.selenium.dev/documentation/guides/finding_elements/)
+
+[Locator Strategies](https://www.selenium.dev/documentation/webdriver/elements/locators/)
+
+[Page Object Pattern](https://www.selenium.dev/documentation/test_practices/encouraged/page_object_models/)
+
+
 ## 1. Create a client
 
 ### Launch a browser for UiPath attach

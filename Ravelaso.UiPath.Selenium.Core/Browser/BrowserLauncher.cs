@@ -34,24 +34,60 @@ public static class BrowserLauncher
         if (string.IsNullOrWhiteSpace(executable) || !File.Exists(executable))
             throw new FileNotFoundException("Could not find the browser executable.", executable);
 
-        var userDataDir = Path.Combine(Path.GetTempPath(), "RavelasoBrowserDebug", port.ToString());
-        Directory.CreateDirectory(userDataDir);
+        var debugPort = options.RemoteDebuggingPort ?? port;
+
+        string? userDataDir = null;
+        if (!options.UseDefaultUserProfile)
+        {
+            userDataDir = string.IsNullOrWhiteSpace(options.UserDataDir)
+                ? Path.Combine(Path.GetTempPath(), "RavelasoBrowserDebug", debugPort.ToString())
+                : options.UserDataDir!;
+            Directory.CreateDirectory(userDataDir);
+        }
 
         var arguments = new List<string>
         {
-            $"--remote-debugging-port={port}",
-            $"--user-data-dir=\"{userDataDir}\"",
-            "--no-first-run",
-            "--no-default-browser-check"
+            $"--remote-debugging-port={debugPort}"
         };
+
+        if (userDataDir is not null)
+        {
+            arguments.Add($"--user-data-dir=\"{userDataDir}\"");
+            arguments.Add("--no-first-run");
+            arguments.Add("--no-default-browser-check");
+        }
 
         if (options.Headless)
             arguments.Add("--headless=new");
 
-        if (options.Maximize && !options.Headless)
+        if (options.Incognito)
+            arguments.Add("--incognito");
+
+        if (options.DisableGpu)
+            arguments.Add("--disable-gpu");
+
+        if (options.NoSandbox)
+            arguments.Add("--no-sandbox");
+
+        if (options.DisableExtensions)
+            arguments.Add("--disable-extensions");
+
+        if (options.DisableWebSecurity)
+            arguments.Add("--disable-web-security");
+
+        if (options.IgnoreCertificateErrors)
+            arguments.Add("--ignore-certificate-errors");
+
+        if (!string.IsNullOrWhiteSpace(options.UserAgent))
+            arguments.Add($"--user-agent={options.UserAgent}");
+
+        if (options.StartMaximized || (options.Maximize && !options.Headless))
             arguments.Add("--start-maximized");
 
         arguments.Add($"--window-size={options.WindowWidth},{options.WindowHeight}");
+
+        if (!string.IsNullOrWhiteSpace(options.WindowPosition))
+            arguments.Add($"--window-position={options.WindowPosition}");
 
         if (!string.IsNullOrWhiteSpace(options.BinaryPath))
             arguments.Add($"\"{options.BinaryPath}\"");
@@ -71,7 +107,7 @@ public static class BrowserLauncher
             throw new InvalidOperationException("Failed to start the browser process.");
 
         var stopwatch = Stopwatch.StartNew();
-        while (stopwatch.Elapsed < TimeSpan.FromSeconds(10))
+        while (stopwatch.Elapsed < options.LaunchTimeout)
         {
             if (IsDebugPortOpen(options.DebuggerAddress))
                 return process;

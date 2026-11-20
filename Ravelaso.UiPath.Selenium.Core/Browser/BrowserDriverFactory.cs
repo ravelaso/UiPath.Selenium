@@ -46,6 +46,50 @@ public static class BrowserDriverFactory
     {
         var chromeOptions = new ChromeOptions();
 
+        if (options.Proxy is not null)
+        {
+            var chromeProxy = new Proxy { HttpProxy = options.Proxy, SslProxy = options.Proxy };
+            if (!string.IsNullOrWhiteSpace(options.ProxyBypassList))
+                chromeProxy.AddBypassAddresses(options.ProxyBypassList.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+            chromeOptions.Proxy = chromeProxy;
+        }
+
+        if (options.AcceptInsecureCertificates)
+            chromeOptions.AcceptInsecureCertificates = true;
+
+        if (options.PageLoadStrategy.HasValue)
+            chromeOptions.PageLoadStrategy = options.PageLoadStrategy.Value;
+
+        if (options.UnhandledPromptBehavior.HasValue)
+            chromeOptions.UnhandledPromptBehavior = options.UnhandledPromptBehavior.Value;
+
+        if (!string.IsNullOrWhiteSpace(options.UserAgent))
+            chromeOptions.AddArgument($"--user-agent={options.UserAgent}");
+
+        if (options.Incognito)
+            chromeOptions.AddArgument("--incognito");
+
+        if (options.DisableGpu)
+            chromeOptions.AddArgument("--disable-gpu");
+
+        if (options.NoSandbox)
+            chromeOptions.AddArgument("--no-sandbox");
+
+        if (options.DisableExtensions)
+            chromeOptions.AddArgument("--disable-extensions");
+
+        if (options.DisableWebSecurity)
+            chromeOptions.AddArgument("--disable-web-security");
+
+        if (options.IgnoreCertificateErrors)
+            chromeOptions.AddArgument("--ignore-certificate-errors");
+
+        if (options.WindowPosition is not null)
+            chromeOptions.AddArgument($"--window-position={options.WindowPosition}");
+
+        if (options.StartMaximized)
+            chromeOptions.AddArgument("--start-maximized");
+
         if (!string.IsNullOrWhiteSpace(options.DebuggerAddress))
         {
             // Attach to an already-running browser
@@ -72,6 +116,50 @@ public static class BrowserDriverFactory
     {
         var edgeOptions = new EdgeOptions();
 
+        if (options.Proxy is not null)
+        {
+            var edgeProxy = new Proxy { HttpProxy = options.Proxy, SslProxy = options.Proxy };
+            if (!string.IsNullOrWhiteSpace(options.ProxyBypassList))
+                edgeProxy.AddBypassAddresses(options.ProxyBypassList.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+            edgeOptions.Proxy = edgeProxy;
+        }
+
+        if (options.AcceptInsecureCertificates)
+            edgeOptions.AcceptInsecureCertificates = true;
+
+        if (options.PageLoadStrategy.HasValue)
+            edgeOptions.PageLoadStrategy = options.PageLoadStrategy.Value;
+
+        if (options.UnhandledPromptBehavior.HasValue)
+            edgeOptions.UnhandledPromptBehavior = options.UnhandledPromptBehavior.Value;
+
+        if (!string.IsNullOrWhiteSpace(options.UserAgent))
+            edgeOptions.AddArgument($"--user-agent={options.UserAgent}");
+
+        if (options.Incognito)
+            edgeOptions.AddArgument("--incognito");
+
+        if (options.DisableGpu)
+            edgeOptions.AddArgument("--disable-gpu");
+
+        if (options.NoSandbox)
+            edgeOptions.AddArgument("--no-sandbox");
+
+        if (options.DisableExtensions)
+            edgeOptions.AddArgument("--disable-extensions");
+
+        if (options.DisableWebSecurity)
+            edgeOptions.AddArgument("--disable-web-security");
+
+        if (options.IgnoreCertificateErrors)
+            edgeOptions.AddArgument("--ignore-certificate-errors");
+
+        if (options.WindowPosition is not null)
+            edgeOptions.AddArgument($"--window-position={options.WindowPosition}");
+
+        if (options.StartMaximized)
+            edgeOptions.AddArgument("--start-maximized");
+
         if (!string.IsNullOrWhiteSpace(options.DebuggerAddress))
         {
             // Attach to an already-running browser
@@ -97,6 +185,26 @@ public static class BrowserDriverFactory
     private static IWebDriver CreateFirefox(BrowserOptions options)
     {
         var firefoxOptions = new FirefoxOptions();
+
+        if (options.Proxy is not null)
+        {
+            var firefoxProxy = new Proxy { HttpProxy = options.Proxy, SslProxy = options.Proxy };
+            if (!string.IsNullOrWhiteSpace(options.ProxyBypassList))
+                firefoxProxy.AddBypassAddresses(options.ProxyBypassList.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+            firefoxOptions.Proxy = firefoxProxy;
+        }
+
+        if (options.AcceptInsecureCertificates)
+            firefoxOptions.AcceptInsecureCertificates = true;
+
+        if (options.PageLoadStrategy.HasValue)
+            firefoxOptions.PageLoadStrategy = options.PageLoadStrategy.Value;
+
+        if (options.UnhandledPromptBehavior.HasValue)
+            firefoxOptions.UnhandledPromptBehavior = options.UnhandledPromptBehavior.Value;
+
+        if (!string.IsNullOrWhiteSpace(options.UserAgent))
+            firefoxOptions.AddArgument($"-user-agent={options.UserAgent}");
 
         if (options.Headless)
             firefoxOptions.AddArgument("-headless");

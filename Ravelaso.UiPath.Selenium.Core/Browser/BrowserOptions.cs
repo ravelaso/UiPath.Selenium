@@ -1,3 +1,5 @@
+using OpenQA.Selenium;
+
 // ReSharper disable CheckNamespace
 namespace Ravelaso.UiPath.Selenium.Core;
 
@@ -69,5 +71,107 @@ public class BrowserOptions
     /// the driver connects to the already-running browser.
     /// </summary>
     public string? DebuggerAddress { get; set; }
+
+    // --- Profile / session (additive) ---
+
+    /// <summary>
+    /// Explicit user data directory to use. When null and <see cref="UseDefaultUserProfile"/> is false,
+    /// an isolated temporary profile is created. Default: null.
+    /// </summary>
+    public string? UserDataDir { get; set; }
+
+    /// <summary>
+    /// Use the current user's default browser profile (extensions, cookies, settings).
+    /// When true, no --user-data-dir is passed. Default: false.
+    /// </summary>
+    public bool UseDefaultUserProfile { get; set; }
+
+    /// <summary>
+    /// Launch in incognito mode. Default: false.
+    /// </summary>
+    public bool Incognito { get; set; }
+
+    // --- Network / security (additive) ---
+
+    /// <summary>
+    /// Proxy server (e.g. "http://host:port"). Default: null (no proxy).
+    /// </summary>
+    public string? Proxy { get; set; }
+
+    /// <summary>
+    /// Comma-separated proxy bypass list. Default: null.
+    /// </summary>
+    public string? ProxyBypassList { get; set; }
+
+    /// <summary>
+    /// Accept insecure (self-signed) certificates. Default: false.
+    /// </summary>
+    public bool AcceptInsecureCertificates { get; set; }
+
+    /// <summary>
+    /// Disable web security (CORS). Default: false.
+    /// </summary>
+    public bool DisableWebSecurity { get; set; }
+
+    /// <summary>
+    /// Ignore certificate errors. Default: false.
+    /// </summary>
+    public bool IgnoreCertificateErrors { get; set; }
+
+    // --- Runtime / performance (additive) ---
+
+    /// <summary>
+    /// Disable GPU hardware acceleration. Default: false.
+    /// </summary>
+    public bool DisableGpu { get; set; }
+
+    /// <summary>
+    /// Disable the sandbox. Default: false.
+    /// </summary>
+    public bool NoSandbox { get; set; }
+
+    /// <summary>
+    /// Disable extensions. Default: false.
+    /// </summary>
+    public bool DisableExtensions { get; set; }
+
+    /// <summary>
+    /// Override the User-Agent string. Default: null.
+    /// </summary>
+    public string? UserAgent { get; set; }
+
+    // --- Launch (additive) ---
+
+    /// <summary>
+    /// Remote debugging port for <see cref="BrowserLauncher"/>. Default: null (9222).
+    /// </summary>
+    public int? RemoteDebuggingPort { get; set; }
+
+    /// <summary>
+    /// Timeout waiting for the debug port to become available. Default: 10 seconds.
+    /// </summary>
+    public TimeSpan LaunchTimeout { get; set; } = TimeSpan.FromSeconds(10);
+
+    /// <summary>
+    /// Window position as "x,y". Default: null (browser default).
+    /// </summary>
+    public string? WindowPosition { get; set; }
+
+    /// <summary>
+    /// Start maximized on launch. Default: false (use <see cref="Maximize"/> for driver-level maximize).
+    /// </summary>
+    public bool StartMaximized { get; set; }
+
+    // --- Selenium-level (additive) ---
+
+    /// <summary>
+    /// Page load strategy. Default: null (browser default).
+    /// </summary>
+    public PageLoadStrategy? PageLoadStrategy { get; set; }
+
+    /// <summary>
+    /// Unhandled prompt behavior. Default: null (browser default).
+    /// </summary>
+    public UnhandledPromptBehavior? UnhandledPromptBehavior { get; set; }
 
 }

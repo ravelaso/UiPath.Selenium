@@ -103,7 +103,8 @@ internal static class DownloadHelper
             throw new ArgumentNullException(nameof(downloadButton));
         if (string.IsNullOrWhiteSpace(destinationPath))
             throw new ArgumentException("Destination path cannot be empty.", nameof(destinationPath));
-
+        
+        // TODO: Find a better way to handle timeout and download progress..
         var effectiveTimeout = timeout > TimeSpan.Zero ? timeout : TimeSpan.FromSeconds(60);
         var tempFolder = Path.Combine(Path.GetTempPath(), "RavelasoDownloads", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempFolder);

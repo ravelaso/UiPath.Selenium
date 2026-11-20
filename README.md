@@ -6,6 +6,9 @@ Selenium WebDriver wrapper for .NET that simplifies web automation in UiPath Stu
 
 THIS IS WORK IN PROGRESS! Please do not take it seriously for now until a stable release is ready. API may change!
 
+
+
+
 ---
 
 ## What is it?
@@ -363,6 +366,17 @@ Use this to launch an Edge browser with remote debug enabled.
 ```bash
 & "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --remote-debugging-port=9222 --user-data-dir="C:\Temp\EdgeDebug"
 ```
+
+### To Read
+
+For WebDriverBiDi protocol, updating the Download behavior from CDP -> https://w3c.github.io/webdriver-bidi/#cddl-type-browsersetdownloadbehaviorresult
+
+
+browsingContext, get events, downloadEnd:
+https://developer.mozilla.org/en-US/docs/Web/WebDriver/Reference/BiDi/Modules/browsingContext/downloadEnd
+
+session subscribe: https://developer.mozilla.org/en-US/docs/Web/WebDriver/Reference/BiDi/Modules/session/subscribe
+
 
 ## License
 
