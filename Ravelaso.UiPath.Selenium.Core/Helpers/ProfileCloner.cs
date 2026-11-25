@@ -66,6 +66,18 @@ internal static class ProfileCloner
 
         Directory.CreateDirectory(targetDefault);
 
+        // Already populated (marker or fallback heuristic) -> skip.
+        var marker = Path.Combine(targetDefault, ".ravelaso-extensions-copied");
+        if (File.Exists(marker))
+            return false;
+
+        if (Directory.Exists(Path.Combine(targetDefault, "Extensions"))
+            && Directory.GetDirectories(Path.Combine(targetDefault, "Extensions")).Length > 0
+            && File.Exists(Path.Combine(targetDefault, "Preferences")))
+        {
+            return false;
+        }
+
         if (!Directory.Exists(sourceDefault))
             return false;
 
@@ -90,6 +102,18 @@ internal static class ProfileCloner
             {
                 File.Copy(src, dst, overwrite: true);
                 copied = true;
+            }
+        }
+
+        if (copied)
+        {
+            try
+            {
+                File.WriteAllText(Path.Combine(targetDefault, ".ravelaso-extensions-copied"), DateTime.UtcNow.ToString("O"));
+            }
+            catch
+            {
+                // Marker is best-effort; ignore failures.
             }
         }
 
