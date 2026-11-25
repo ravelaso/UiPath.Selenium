@@ -44,8 +44,9 @@ internal static class McpHelpers
 
         try
         {
-            var html = (string)((IJavaScriptExecutor)driver).ExecuteScript("return arguments[0].outerHTML;", el);
-            info["outerHtml"] = Truncate(html, 1500);
+            var html = ((IJavaScriptExecutor)driver).ExecuteScript("return arguments[0].outerHTML;", el) as string;
+            if (html is not null)
+                info["outerHtml"] = Truncate(html, 1500);
         }
         catch { info["outerHtml"] = null; }
 

@@ -55,8 +55,9 @@ public static class DiscoveryTools
             // Add outerHTML snippet
             try
             {
-                var html = (string)((OpenQA.Selenium.IJavaScriptExecutor)driver).ExecuteScript("return arguments[0].outerHTML;", el);
-                info["outerHtml"] = McpHelpers.Truncate(html, 1500);
+                var html = ((OpenQA.Selenium.IJavaScriptExecutor)driver).ExecuteScript("return arguments[0].outerHTML;", el) as string;
+                if (html is not null)
+                    info["outerHtml"] = McpHelpers.Truncate(html, 1500);
             }
             catch { }
             return McpHelpers.ToJson(info);

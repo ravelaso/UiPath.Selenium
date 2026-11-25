@@ -9,6 +9,8 @@ public partial class RavelasoWebClient
     /// Sets the browser zoom using a decimal value, where 1.0 is 100%.
     /// </summary>
     /// <param name="percent">Zoom value, for example 0.8 for 80%.</param>
+    /// <param name="beforeStepDelay">Delay applied before zooming. Defaults to the client's global delay.</param>
+    /// <param name="timeout">Wait applied after zooming for the page to re-layout. Defaults to 3 seconds.</param>
     public void SetZoom(double percent, TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
         BeforeStep(beforeStepDelay);
@@ -19,6 +21,8 @@ public partial class RavelasoWebClient
     /// <summary>
     /// Resets the browser zoom to 100%.
     /// </summary>
+    /// <param name="beforeStepDelay">Delay applied before zooming. Defaults to the client's global delay.</param>
+    /// <param name="timeout">Wait applied after zooming for the page to re-layout. Defaults to 3 seconds.</param>
     public void ResetZoom(TimeSpan? beforeStepDelay = null, TimeSpan? timeout = null)
     {
         BeforeStep(beforeStepDelay);
