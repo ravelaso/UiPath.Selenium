@@ -16,6 +16,6 @@
     <RepositoryUrl>https://github.com/ravelaso/UiPath.Selenium</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>selenium;uipath;webdriver;automation;net8;net10</PackageTags>
-    <PackageReleaseNotes>v0.2.5:BrowserOptions expanded, better for UiPath</PackageReleaseNotes>
+    <PackageReleaseNotes>v0.2.5:Remove UseDefaultUserProfile; add CopyExtensions for debuggable profiles</PackageReleaseNotes>
   </PropertyGroup>
 </Project>

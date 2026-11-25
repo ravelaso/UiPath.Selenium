@@ -75,16 +75,24 @@ public class BrowserOptions
     // --- Profile / session (additive) ---
 
     /// <summary>
-    /// Explicit user data directory to use. When null and <see cref="UseDefaultUserProfile"/> is false,
-    /// an isolated temporary profile is created. Default: null.
+    /// User data directory to launch against. Must be a non-default directory for
+    /// remote debugging to work on Chromium 136+. When null, a temporary directory
+    /// is created. Default: null.
     /// </summary>
     public string? UserDataDir { get; set; }
 
     /// <summary>
-    /// Use the current user's default browser profile (extensions, cookies, settings).
-    /// When true, no --user-data-dir is passed. Default: false.
+    /// Copy extensions from the source profile into <see cref="UserDataDir"/> before launch.
+    /// Source defaults to the current user's default profile for the selected browser;
+    /// override with <see cref="SourceUserDataDir"/>. Default: false.
     /// </summary>
-    public bool UseDefaultUserProfile { get; set; }
+    public bool CopyExtensions { get; set; }
+
+    /// <summary>
+    /// Source user data directory to copy extensions from. When null, the default
+    /// profile for the selected browser is used. Default: null.
+    /// </summary>
+    public string? SourceUserDataDir { get; set; }
 
     /// <summary>
     /// Launch in incognito mode. Default: false.

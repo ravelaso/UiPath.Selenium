@@ -104,7 +104,10 @@ var options = new BrowserOptions
     DebuggerAddress = "localhost:9222",
     Maximize = true,
     GlobalDelay = TimeSpan.FromSeconds(1),
-    ElementWaitTimeout = TimeSpan.FromSeconds(10)
+    ElementWaitTimeout = TimeSpan.FromSeconds(10),
+    // Chromium 136+ requires a non-default user data directory for remote debugging.
+    // CopyExtensions keeps your installed extensions in the debuggable profile.
+    CopyExtensions = true
 };
 
 var process = BrowserLauncher.Launch(options);
@@ -118,6 +121,8 @@ using var client = new RavelasoWebClient(options);
 
 Notes:
 - If the debug port is already open, `BrowserLauncher.Launch` returns `null`.
+- On Chromium 136+ (Edge/Chrome), `--remote-debugging-port` is ignored for the default user data directory. The launcher always uses a non-default directory (temp, or `UserDataDir` if set).
+- Set `CopyExtensions = true` to bring your installed extensions into the debuggable profile.
 - In UiPath, use **Use Application/Browser** with **Attach to running application**.
 - The library and UiPath share the same browser session.
 
@@ -333,7 +338,30 @@ var options = new BrowserOptions
     GlobalDelay = TimeSpan.FromSeconds(1),        // Delay before each action
     ElementWaitTimeout = TimeSpan.FromSeconds(10), // Default wait timeout
     PageLoadTimeout = TimeSpan.FromSeconds(60),   // Page load timeout
-    DebuggerAddress = "localhost:9222"            // Attach to existing browser
+    DebuggerAddress = "localhost:9222",           // Attach to existing browser
+    // Launch / profile
+    UserDataDir = null,                           // Non-default profile dir (null = temp)
+    CopyExtensions = false,                      // Copy extensions from default profile
+    SourceUserDataDir = null,                     // Override source profile for copy
+    RemoteDebuggingPort = null,                   // Override debug port (null = from DebuggerAddress)
+    LaunchTimeout = TimeSpan.FromSeconds(10),     // Wait for debug port
+    WindowPosition = null,                       // "x,y"
+    StartMaximized = false,                      // --start-maximized
+    Incognito = false,
+    // Network / security
+    Proxy = null,                                // "http://host:port"
+    ProxyBypassList = null,                      // comma-separated bypass
+    AcceptInsecureCertificates = false,
+    DisableWebSecurity = false,
+    IgnoreCertificateErrors = false,
+    // Runtime
+    DisableGpu = false,
+    NoSandbox = false,
+    DisableExtensions = false,
+    UserAgent = null,
+    // Selenium-level
+    PageLoadStrategy = null,                     // Normal/Eager/None
+    UnhandledPromptBehavior = null               // Accept/Dismiss/Ignore
 };
 
 var client = new RavelasoWebClient(WebBrowser.Edge, options);
@@ -359,10 +387,14 @@ Then rebuild: `dotnet build -c Release`
 
 ### Debugging Attach
 
-Use this to launch an Edge browser with remote debug enabled.
+Chromium 136+ ignores `--remote-debugging-port` for the default user data directory.
+Use a dedicated (non-default) directory:
+
 ```bash
 & "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --remote-debugging-port=9222 --user-data-dir="C:\Temp\EdgeDebug"
 ```
+
+To keep your extensions in the debuggable profile, use `BrowserLauncher` with `CopyExtensions = true` (see "Launching a browser for UiPath attach").
 
 ### To Read
 

@@ -36,26 +36,31 @@ public static class BrowserLauncher
 
         var debugPort = options.RemoteDebuggingPort ?? port;
 
-        string? userDataDir = null;
-        if (!options.UseDefaultUserProfile)
+        var userDataDir = string.IsNullOrWhiteSpace(options.UserDataDir)
+            ? Path.Combine(Path.GetTempPath(), "RavelasoBrowserDebug", debugPort.ToString())
+            : options.UserDataDir!;
+
+        Directory.CreateDirectory(userDataDir);
+
+        if (options.CopyExtensions)
         {
-            userDataDir = string.IsNullOrWhiteSpace(options.UserDataDir)
-                ? Path.Combine(Path.GetTempPath(), "RavelasoBrowserDebug", debugPort.ToString())
-                : options.UserDataDir!;
-            Directory.CreateDirectory(userDataDir);
+            var sourceRoot = options.SourceUserDataDir
+                ?? ProfileCloner.GetDefaultUserDataDir(options.WebBrowser);
+            if (sourceRoot is not null)
+            {
+                Console.WriteLine($"Cloning extensions from {sourceRoot} to {userDataDir}...");
+                ProfileCloner.CloneExtensions(sourceRoot, userDataDir);
+                Console.WriteLine("Cloning completed.");
+            }
         }
 
         var arguments = new List<string>
         {
-            $"--remote-debugging-port={debugPort}"
+            $"--remote-debugging-port={debugPort}",
+            $"--user-data-dir=\"{userDataDir}\"",
+            "--no-first-run",
+            "--no-default-browser-check"
         };
-
-        if (userDataDir is not null)
-        {
-            arguments.Add($"--user-data-dir=\"{userDataDir}\"");
-            arguments.Add("--no-first-run");
-            arguments.Add("--no-default-browser-check");
-        }
 
         if (options.Headless)
             arguments.Add("--headless=new");
