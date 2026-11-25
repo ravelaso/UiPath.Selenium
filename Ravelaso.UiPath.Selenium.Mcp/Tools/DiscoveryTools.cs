@@ -8,7 +8,7 @@ namespace Ravelaso.UiPath.Selenium.Mcp.Tools;
 [McpServerToolType]
 public static class DiscoveryTools
 {
-    [McpServerTool, Description("Find elements on the current page. strategy: id|name|css|xpath|tag|text|class|attr. For 'attr', pass attributeName too. Returns tag, text, attributes, and a suggested Loc.* expression per element.")]
+    [McpServerTool, Description("Find elements on the current page. strategy: id|name|css|xpath|tag|text|class|attr. For 'attr', pass attributeName too. Returns tag, text, attributes, and a suggested Loc.* expression per element. Read the 'readme' or 'quickstart' resource for the RavelasoWebClient API.")]
     public static string BrowserFindElements(
         BrowserSession session,
         [Description("Strategy: id, name, css, xpath, tag, text, class, attr.")] string strategy,

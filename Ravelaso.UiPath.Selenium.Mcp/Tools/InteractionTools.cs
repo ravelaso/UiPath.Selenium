@@ -8,7 +8,7 @@ namespace Ravelaso.UiPath.Selenium.Mcp.Tools;
 [McpServerToolType]
 public static class InteractionTools
 {
-    [McpServerTool, Description("Click an element located by strategy+value.")]
+    [McpServerTool, Description("Click an element located by strategy+value. Read the 'readme' or 'quickstart' resource for the RavelasoWebClient API.")]
     public static string BrowserClick(
         BrowserSession session,
         [Description("Strategy: id, name, css, xpath, tag, text, class, attr.")] string strategy,

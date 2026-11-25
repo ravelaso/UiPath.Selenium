@@ -7,7 +7,7 @@ namespace Ravelaso.UiPath.Selenium.Mcp.Tools;
 [McpServerToolType]
 public static class NavigationTools
 {
-    [McpServerTool, Description("Navigate the browser to a URL.")]
+    [McpServerTool, Description("Navigate the browser to a URL. Read the 'readme' or 'quickstart' resource for the RavelasoWebClient API.")]
     public static string BrowserNavigate(BrowserSession session, [Description("URL to navigate to.")] string url)
     {
         var client = session.Client;
