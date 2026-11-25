@@ -20,6 +20,8 @@ builder.Services
 
 await builder.Build().RunAsync();
 
+
+
 [McpServerToolType]
 public static class ServerInfoTools
 {
