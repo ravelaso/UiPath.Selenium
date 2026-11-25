@@ -16,4 +16,10 @@
     <ProjectReference Include="..\Ravelaso.UiPath.Selenium.Core\Ravelaso.UiPath.Selenium.Core.csproj" />
   </ItemGroup>
 
+  <!-- Embed library docs so they ship inside the published exe -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\README.md" Link="Resources\README.md" />
+    <EmbeddedResource Include="..\docs\QUICKSTART.md" Link="Resources\QUICKSTART.md" />
+  </ItemGroup>
+
 </Project>

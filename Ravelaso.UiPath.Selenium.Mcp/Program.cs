@@ -15,7 +15,8 @@ builder.Services
     .AddSingleton<BrowserSession>()
     .AddMcpServer()
     .WithStdioServerTransport()
-    .WithToolsFromAssembly();
+    .WithToolsFromAssembly()
+    .WithResourcesFromAssembly();
 
 await builder.Build().RunAsync();
 

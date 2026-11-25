@@ -31,27 +31,61 @@ The server exposes the library README and QuickStart as MCP resources so the age
 
 ---
 
-## Running locally
+## Installation
 
-### Option 1: Executable (recommended)
+The MCP server is a standalone console application. It does **not** require the `Ravelaso.UiPath.Selenium` NuGet package — it references the Core library directly via project reference and bundles all dependencies in its output folder.
 
-Build once, then point your MCP client at the exe:
+### Option 1: Published self-contained exe (recommended for end users)
+
+Download the latest release from the GitHub Releases page (or build it yourself). The published exe includes the .NET runtime — no SDK or NuGet needed on the target machine.
+
+**Build it yourself:**
+
+```bash
+cd Ravelaso.UiPath.Selenium.Mcp
+dotnet publish -c Release -r win-x64 --self-contained true -o ./publish
+```
+
+This produces a folder with `Ravelaso.UiPath.Selenium.Mcp.exe` plus all dependencies. Copy the folder anywhere (e.g. `C:\Tools\RavelasoMcp\`).
+
+**OpenCode config** (`opencode.json` or `~/.config/opencode/opencode.json`):
 
 ```json
 {
   "mcp": {
     "ravelaso-selenium": {
       "type": "local",
-      "command": [
-        "C:\\Data\\Dev\\Ravelaso.UiPath.Selenium\\Ravelaso.UiPath.Selenium.Mcp\\bin\\Debug\\net10.0\\Ravelaso.UiPath.Selenium.Mcp.exe"
-      ],
+      "command": ["C:\\Tools\\RavelasoMcp\\Ravelaso.UiPath.Selenium.Mcp.exe"],
       "enabled": true
     }
   }
 }
 ```
 
-### Option 2: dotnet run
+### Option 2: Build from source (for development)
+
+Clone the repo, build, and point OpenCode at the debug exe:
+
+```bash
+cd Ravelaso.UiPath.Selenium
+dotnet build -c Debug
+```
+
+**OpenCode config:**
+
+```json
+{
+  "mcp": {
+    "ravelaso-selenium": {
+      "type": "local",
+      "command": ["C:\\Data\\Dev\\Ravelaso.UiPath.Selenium\\Ravelaso.UiPath.Selenium.Mcp\\bin\\Debug\\net10.0\\Ravelaso.UiPath.Selenium.Mcp.exe"],
+      "enabled": true
+    }
+  }
+}
+```
+
+### Option 3: dotnet run (no pre-build)
 
 ```json
 {
@@ -65,7 +99,45 @@ Build once, then point your MCP client at the exe:
 }
 ```
 
-Rebuild after code changes: `dotnet build` in the Mcp project folder.
+> **Note**: with `--no-build`, you must build first (`dotnet build`). Without `--no-build`, `dotnet run` builds automatically but is slower on startup.
+
+### VS Code
+
+Add to `.vscode/mcp.json`:
+
+```json
+{
+  "servers": {
+    "ravelaso-selenium": {
+      "type": "stdio",
+      "command": "C:\\Tools\\RavelasoMcp\\Ravelaso.UiPath.Selenium.Mcp.exe"
+    }
+  }
+}
+```
+
+### Claude Desktop
+
+Add to `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "ravelaso-selenium": {
+      "command": "C:\\Tools\\RavelasoMcp\\Ravelaso.UiPath.Selenium.Mcp.exe"
+    }
+  }
+}
+```
+
+### Rebuild after code changes
+
+```bash
+cd Ravelaso.UiPath.Selenium\Ravelaso.UiPath.Selenium.Mcp
+dotnet build
+```
+
+If the MCP server is running, stop it first (the exe is locked by the process). OpenCode will respawn it automatically on the next tool call.
 
 ---
 
